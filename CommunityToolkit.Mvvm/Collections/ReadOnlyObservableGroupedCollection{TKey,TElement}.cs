@@ -13,38 +13,35 @@ using System.Runtime.CompilerServices;
 namespace CommunityToolkit.Mvvm.Collections;
 
 /// <summary>
-///     A read-only list of groups.
+/// A read-only list of groups.
 /// </summary>
 /// <typeparam name="TKey">The type of the group keys.</typeparam>
 /// <typeparam name="TElement">The type of elements in the collection.</typeparam>
-public sealed class
-    ReadOnlyObservableGroupedCollection<TKey, TElement> :
-        ReadOnlyObservableCollection<ReadOnlyObservableGroup<TKey, TElement>>, ILookup<TKey, TElement>
+public sealed class ReadOnlyObservableGroupedCollection<TKey, TElement> : ReadOnlyObservableCollection<ReadOnlyObservableGroup<TKey, TElement>>, ILookup<TKey, TElement>
     where TKey : notnull
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ReadOnlyObservableGroupedCollection{TKey, TValue}" /> class.
+    /// Initializes a new instance of the <see cref="ReadOnlyObservableGroupedCollection{TKey, TValue}"/> class.
     /// </summary>
     /// <param name="collection">The source collection to wrap.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="collection" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="collection"/> is <see langword="null"/>.</exception>
     public ReadOnlyObservableGroupedCollection(ObservableCollection<ObservableGroup<TKey, TElement>> collection)
-        : base(new ObservableCollection<ReadOnlyObservableGroup<TKey, TElement>>(
-            collection?.Select(static g => new ReadOnlyObservableGroup<TKey, TElement>(g))!))
+        : base(new ObservableCollection<ReadOnlyObservableGroup<TKey, TElement>>(collection?.Select(static g => new ReadOnlyObservableGroup<TKey, TElement>(g))!))
     {
         collection!.CollectionChanged += OnSourceCollectionChanged;
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ReadOnlyObservableGroupedCollection{TKey, TValue}" /> class.
+    /// Initializes a new instance of the <see cref="ReadOnlyObservableGroupedCollection{TKey, TValue}"/> class.
     /// </summary>
     /// <param name="collection">The source collection to wrap.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="collection" /> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="collection"/> is <see langword="null"/>.</exception>
     public ReadOnlyObservableGroupedCollection(ObservableCollection<ReadOnlyObservableGroup<TKey, TElement>> collection)
         : base(collection)
     {
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     IEnumerable<TElement> ILookup<TKey, TElement>.this[TKey key]
     {
         get
@@ -60,27 +57,23 @@ public sealed class
         }
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     bool ILookup<TKey, TElement>.Contains(TKey key)
     {
         return key is not null && FirstGroupByKeyOrDefault(key) is not null;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     IEnumerator<IGrouping<TKey, TElement>> IEnumerable<IGrouping<TKey, TElement>>.GetEnumerator()
     {
         return GetEnumerator();
     }
 
     /// <summary>
-    ///     Forwards the <see cref="INotifyCollectionChanged.CollectionChanged" /> event whenever it is raised by the wrapped
-    ///     collection.
+    /// Forwards the <see cref="INotifyCollectionChanged.CollectionChanged"/> event whenever it is raised by the wrapped collection.
     /// </summary>
-    /// <param name="sender">
-    ///     The wrapped collection (an <see cref="ObservableCollection{T}" /> of
-    ///     <see cref="ReadOnlyObservableGroup{TKey, TValue}" /> instance).
-    /// </param>
-    /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs" /> arguments.</param>
+    /// <param name="sender">The wrapped collection (an <see cref="ObservableCollection{T}"/> of <see cref="ReadOnlyObservableGroup{TKey, TValue}"/> instance).</param>
+    /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> arguments.</param>
     /// <exception cref="NotSupportedException">Thrown if a range operation is requested.</exception>
     private void OnSourceCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
@@ -98,8 +91,7 @@ public sealed class
         }
 
         // The inner Items list is ObservableCollection<ReadOnlyObservableGroup<TKey, TValue>>, so doing a direct cast here will always succeed
-        ObservableCollection<ReadOnlyObservableGroup<TKey, TElement>> items =
-            (ObservableCollection<ReadOnlyObservableGroup<TKey, TElement>>)Items;
+        ObservableCollection<ReadOnlyObservableGroup<TKey, TElement>> items = (ObservableCollection<ReadOnlyObservableGroup<TKey, TElement>>)Items;
 
         switch (e.Action)
         {
@@ -163,14 +155,16 @@ public sealed class
             case NotifyCollectionChangedAction.Reset:
                 items.Clear();
                 break;
+            default:
+                break;
         }
     }
 
     /// <summary>
-    ///     Returns the first group with <paramref name="key" /> key or <see langword="null" /> if not found.
+    /// Returns the first group with <paramref name="key"/> key or <see langword="null"/> if not found.
     /// </summary>
-    /// <param name="key">The key of the group to query (assumed not to be <see langword="null" />).</param>
-    /// <returns>The first group matching <paramref name="key" />.</returns>
+    /// <param name="key">The key of the group to query (assumed not to be <see langword="null"/>).</param>
+    /// <returns>The first group matching <paramref name="key"/>.</returns>
     private IEnumerable<TElement>? FirstGroupByKeyOrDefault(TKey key)
     {
         if (Items is List<ReadOnlyObservableGroup<TKey, TElement>> list)
@@ -187,11 +181,9 @@ public sealed class
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static IEnumerable<TElement>? FirstGroupByKeyOrDefaultFallback(
-            ReadOnlyObservableGroupedCollection<TKey, TElement> source, TKey key)
+        static IEnumerable<TElement>? FirstGroupByKeyOrDefaultFallback(ReadOnlyObservableGroupedCollection<TKey, TElement> source, TKey key)
         {
-            return source.FirstOrDefault<ReadOnlyObservableGroup<TKey, TElement>>(group =>
-                EqualityComparer<TKey>.Default.Equals(group.Key, key));
+            return Enumerable.FirstOrDefault<ReadOnlyObservableGroup<TKey, TElement>>(source, group => EqualityComparer<TKey>.Default.Equals(group.Key, key));
         }
 
         return FirstGroupByKeyOrDefaultFallback(this, key);

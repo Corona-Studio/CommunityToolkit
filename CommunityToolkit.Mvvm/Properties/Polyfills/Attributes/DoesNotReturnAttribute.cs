@@ -7,7 +7,7 @@
 namespace System.Diagnostics.CodeAnalysis;
 
 /// <summary>
-///     Applied to a method that will never return under any circumstance.
+/// Applied to a method that will never return under any circumstance.
 /// </summary>
 /// <remarks>Internal copy from the BCL attribute.</remarks>
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]

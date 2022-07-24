@@ -7,7 +7,7 @@
 namespace System.Runtime.CompilerServices;
 
 /// <summary>
-///     Used to indicate to the compiler that the <c>.locals init</c> flag should not be set in method headers.
+/// Used to indicate to the compiler that the <c>.locals init</c> flag should not be set in method headers.
 /// </summary>
 /// <remarks>Internal copy from the BCL attribute.</remarks>
 [AttributeUsage(

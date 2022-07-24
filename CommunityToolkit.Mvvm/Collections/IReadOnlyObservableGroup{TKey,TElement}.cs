@@ -8,16 +8,15 @@ using System.Linq;
 namespace CommunityToolkit.Mvvm.Collections;
 
 /// <summary>
-///     An interface for a grouped collection of items.
+/// An interface for a grouped collection of items.
 /// </summary>
 /// <typeparam name="TKey">The type of the group key.</typeparam>
 /// <typeparam name="TElement">The type of elements in the group.</typeparam>
-public interface IReadOnlyObservableGroup<out TKey, out TElement> : IReadOnlyObservableGroup<TKey>,
-    IReadOnlyList<TElement>, IGrouping<TKey, TElement>
+public interface IReadOnlyObservableGroup<out TKey, out TElement> : IReadOnlyObservableGroup<TKey>, IReadOnlyList<TElement>, IGrouping<TKey, TElement>
     where TKey : notnull
 {
     /// <summary>
-    ///     Gets the element at the specified index in the current collection.
+    /// Gets the element at the specified index in the current collection.
     /// </summary>
     /// <param name="index">The zero-based index of the element to get.</param>
     /// <returns>The element at the specified index in the read-only list.</returns>

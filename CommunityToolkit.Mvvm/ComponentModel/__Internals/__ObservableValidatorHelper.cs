@@ -8,17 +8,17 @@ using System.ComponentModel;
 namespace CommunityToolkit.Mvvm.ComponentModel.__Internals;
 
 /// <summary>
-///     An internal helper to support the source generator APIs related to <see cref="ObservableValidator" />.
-///     This type is not intended to be used directly by user code.
+/// An internal helper to support the source generator APIs related to <see cref="ObservableValidator"/>.
+/// This type is not intended to be used directly by user code.
 /// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 [Obsolete("This type is not intended to be used directly by user code")]
 public static class __ObservableValidatorHelper
 {
     /// <summary>
-    ///     Invokes <see cref="ObservableValidator.ValidateProperty(object?, string?)" /> externally on a target instance.
+    /// Invokes <see cref="ObservableValidator.ValidateProperty(object?, string?)"/> externally on a target instance.
     /// </summary>
-    /// <param name="instance">The target <see cref="ObservableValidator" /> instance.</param>
+    /// <param name="instance">The target <see cref="ObservableValidator"/> instance.</param>
     /// <param name="value">The value to test for the specified property.</param>
     /// <param name="propertyName">The name of the property to validate.</param>
     [EditorBrowsable(EditorBrowsableState.Never)]

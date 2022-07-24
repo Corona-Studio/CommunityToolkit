@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 namespace System.Collections.Generic;
 
 /// <summary>
-///     A specialized <see cref="Dictionary{TKey, TValue}" /> implementation to be used with messenger types.
+/// A specialized <see cref="Dictionary{TKey, TValue}"/> implementation to be used with messenger types.
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
 /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
@@ -19,59 +19,56 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
     where TValue : class?
 {
     /// <summary>
-    ///     The index indicating the start of a free linked list.
+    /// The index indicating the start of a free linked list.
     /// </summary>
     private const int StartOfFreeList = -3;
 
     /// <summary>
-    ///     The array of 1-based indices for the <see cref="Entry" /> items stored in <see cref="entries" />.
+    /// The array of 1-based indices for the <see cref="Entry"/> items stored in <see cref="entries"/>.
     /// </summary>
     private int[] buckets;
 
     /// <summary>
-    ///     The current number of items stored in the map.
-    /// </summary>
-    private int count;
-
-    /// <summary>
-    ///     The array of currently stored key-value pairs (ie. the lists for each hash group).
+    /// The array of currently stored key-value pairs (ie. the lists for each hash group).
     /// </summary>
     private Entry[] entries;
 
     /// <summary>
-    ///     A coefficient used to speed up retrieving the target bucket when doing lookups.
+    /// A coefficient used to speed up retrieving the target bucket when doing lookups.
     /// </summary>
     private ulong fastModMultiplier;
 
     /// <summary>
-    ///     The total number of empty items.
+    /// The current number of items stored in the map.
     /// </summary>
-    private int freeCount;
+    private int count;
 
     /// <summary>
-    ///     The 1-based index for the start of the free list within <see cref="entries" />.
+    /// The 1-based index for the start of the free list within <see cref="entries"/>.
     /// </summary>
     private int freeList;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="Dictionary2{TKey, TValue}" /> class.
+    /// The total number of empty items.
+    /// </summary>
+    private int freeCount;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Dictionary2{TKey, TValue}"/> class.
     /// </summary>
     public Dictionary2()
     {
         Initialize(0);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public int Count
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            return this.count - this.freeCount;
-        }
+        get => this.count - this.freeCount;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public TValue this[TKey key]
     {
         get
@@ -89,7 +86,7 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
         }
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public void Clear()
     {
         int count = this.count;
@@ -110,7 +107,38 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Checks whether or not the dictionary contains a pair with a specified key.
+    /// </summary>
+    /// <param name="key">The key to look for.</param>
+    /// <returns>Whether or not the key was present in the dictionary.</returns>
+    public bool ContainsKey(TKey key)
+    {
+        return !Unsafe.IsNullRef(ref FindValue(key));
+    }
+
+    /// <summary>
+    /// Gets the value if present for the specified key.
+    /// </summary>
+    /// <param name="key">The key to look for.</param>
+    /// <param name="value">The value found, otherwise <see langword="default"/>.</param>
+    /// <returns>Whether or not the key was present.</returns>
+    public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
+    {
+        ref TValue valRef = ref FindValue(key);
+
+        if (!Unsafe.IsNullRef(ref valRef))
+        {
+            value = valRef;
+            return true;
+        }
+
+        value = default;
+
+        return false;
+    }
+
+    /// <inheritdoc/>
     public bool TryRemove(TKey key)
     {
         uint hashCode = (uint)key.GetHashCode();
@@ -164,40 +192,9 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
     }
 
     /// <summary>
-    ///     Checks whether or not the dictionary contains a pair with a specified key.
-    /// </summary>
-    /// <param name="key">The key to look for.</param>
-    /// <returns>Whether or not the key was present in the dictionary.</returns>
-    public bool ContainsKey(TKey key)
-    {
-        return !Unsafe.IsNullRef(ref FindValue(key));
-    }
-
-    /// <summary>
-    ///     Gets the value if present for the specified key.
-    /// </summary>
-    /// <param name="key">The key to look for.</param>
-    /// <param name="value">The value found, otherwise <see langword="default" />.</param>
-    /// <returns>Whether or not the key was present.</returns>
-    public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
-    {
-        ref TValue valRef = ref FindValue(key);
-
-        if (!Unsafe.IsNullRef(ref valRef))
-        {
-            value = valRef;
-            return true;
-        }
-
-        value = default;
-
-        return false;
-    }
-
-    /// <summary>
-    ///     Gets the value for the specified key, or, if the key is not present,
-    ///     adds an entry and returns the value by ref. This makes it possible to
-    ///     add or update a value in a single look up operation.
+    /// Gets the value for the specified key, or, if the key is not present,
+    /// adds an entry and returns the value by ref. This makes it possible to
+    /// add or update a value in a single look up operation.
     /// </summary>
     /// <param name="key">Key to look for.</param>
     /// <returns>Reference to the new or existing value.</returns>
@@ -260,15 +257,86 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
         return ref entry.Value!;
     }
 
-    /// <inheritdoc cref="IEnumerable{T}.GetEnumerator" />
+    /// <inheritdoc cref="IEnumerable{T}.GetEnumerator"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Enumerator GetEnumerator()
+    public Enumerator GetEnumerator() => new(this);
+
+    /// <summary>
+    /// Enumerator for <see cref="Dictionary2{TKey,TValue}"/>.
+    /// </summary>
+    public ref struct Enumerator
     {
-        return new(this);
+        /// <summary>
+        /// The entries being enumerated.
+        /// </summary>
+        private readonly Entry[] entries;
+
+        /// <summary>
+        /// The current enumeration index.
+        /// </summary>
+        private int index;
+
+        /// <summary>
+        /// The current dictionary count.
+        /// </summary>
+        private readonly int count;
+
+        /// <summary>
+        /// Creates a new <see cref="Enumerator"/> instance.
+        /// </summary>
+        /// <param name="dictionary">The input dictionary to enumerate.</param>
+        internal Enumerator(Dictionary2<TKey, TValue> dictionary)
+        {
+            this.entries = dictionary.entries;
+            this.index = 0;
+            this.count = dictionary.count;
+        }
+
+        /// <inheritdoc cref="IEnumerator.MoveNext"/>
+        public bool MoveNext()
+        {
+            while ((uint)this.index < (uint)this.count)
+            {
+                // We need to preemptively increment the current index so that we still correctly keep track
+                // of the current position in the dictionary even if the users doesn't access any of the
+                // available properties in the enumerator. As this is a possibility, we can't rely on one of
+                // them to increment the index before MoveNext is invoked again. We ditch the standard enumerator
+                // API surface here to expose the Key/Value properties directly and minimize the memory copies.
+                // For the same reason, we also removed the KeyValuePair<TKey, TValue> field here, and instead
+                // rely on the properties lazily accessing the target instances directly from the current entry
+                // pointed at by the index property (adjusted backwards to account for the increment here).
+                if (this.entries![this.index++].Next >= -1)
+                {
+                    return true;
+                }
+            }
+
+            this.index = this.count + 1;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the current key.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TKey GetKey()
+        {
+            return this.entries[this.index - 1].Key;
+        }
+
+        /// <summary>
+        /// Gets the current value.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TValue GetValue()
+        {
+            return this.entries[this.index - 1].Value!;
+        }
     }
 
     /// <summary>
-    ///     Gets the value for the specified key, or.
+    /// Gets the value for the specified key, or.
     /// </summary>
     /// <param name="key">Key to look for.</param>
     /// <returns>Reference to the existing value.</returns>
@@ -295,7 +363,8 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
             }
 
             i = entry.Next;
-        } while (true);
+        }
+        while (true);
 
         ReturnFound:
         ref TValue value = ref entry.Value!;
@@ -310,7 +379,7 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
     }
 
     /// <summary>
-    ///     Initializes the current instance.
+    /// Initializes the current instance.
     /// </summary>
     /// <param name="capacity">The target capacity.</param>
     /// <returns></returns>
@@ -328,7 +397,7 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
     }
 
     /// <summary>
-    ///     Resizes the current dictionary to reduce the number of collisions
+    /// Resizes the current dictionary to reduce the number of collisions
     /// </summary>
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void Resize()
@@ -357,7 +426,7 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
     }
 
     /// <summary>
-    ///     Gets a reference to a target bucket from an input hashcode.
+    /// Gets a reference to a target bucket from an input hashcode.
     /// </summary>
     /// <param name="hashCode">The input hashcode.</param>
     /// <returns>A reference to the target bucket.</returns>
@@ -370,112 +439,38 @@ internal class Dictionary2<TKey, TValue> : IDictionary2<TKey, TValue>
     }
 
     /// <summary>
-    ///     Throws an <see cref="ArgumentException" /> when trying to load an element with a missing key.
-    /// </summary>
-    private static void ThrowArgumentExceptionForKeyNotFound(TKey key)
-    {
-        throw new ArgumentException($"The target key {key} was not present in the dictionary");
-    }
-
-    /// <summary>
-    ///     Enumerator for <see cref="Dictionary2{TKey,TValue}" />.
-    /// </summary>
-    public ref struct Enumerator
-    {
-        /// <summary>
-        ///     The entries being enumerated.
-        /// </summary>
-        private readonly Entry[] entries;
-
-        /// <summary>
-        ///     The current enumeration index.
-        /// </summary>
-        private int index;
-
-        /// <summary>
-        ///     The current dictionary count.
-        /// </summary>
-        private readonly int count;
-
-        /// <summary>
-        ///     Creates a new <see cref="Enumerator" /> instance.
-        /// </summary>
-        /// <param name="dictionary">The input dictionary to enumerate.</param>
-        internal Enumerator(Dictionary2<TKey, TValue> dictionary)
-        {
-            this.entries = dictionary.entries;
-            this.index = 0;
-            this.count = dictionary.count;
-        }
-
-        /// <inheritdoc cref="IEnumerator.MoveNext" />
-        public bool MoveNext()
-        {
-            while ((uint)this.index < (uint)this.count)
-            {
-                // We need to preemptively increment the current index so that we still correctly keep track
-                // of the current position in the dictionary even if the users doesn't access any of the
-                // available properties in the enumerator. As this is a possibility, we can't rely on one of
-                // them to increment the index before MoveNext is invoked again. We ditch the standard enumerator
-                // API surface here to expose the Key/Value properties directly and minimize the memory copies.
-                // For the same reason, we also removed the KeyValuePair<TKey, TValue> field here, and instead
-                // rely on the properties lazily accessing the target instances directly from the current entry
-                // pointed at by the index property (adjusted backwards to account for the increment here).
-                if (this.entries![this.index++].Next >= -1)
-                {
-                    return true;
-                }
-            }
-
-            this.index = this.count + 1;
-
-            return false;
-        }
-
-        /// <summary>
-        ///     Gets the current key.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TKey GetKey()
-        {
-            return this.entries[this.index - 1].Key;
-        }
-
-        /// <summary>
-        ///     Gets the current value.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TValue GetValue()
-        {
-            return this.entries[this.index - 1].Value!;
-        }
-    }
-
-    /// <summary>
-    ///     A type representing a map entry, ie. a node in a given list.
+    /// A type representing a map entry, ie. a node in a given list.
     /// </summary>
     private struct Entry
     {
         /// <summary>
-        ///     The cached hashcode for <see cref="Key" />;
+        /// The cached hashcode for <see cref="Key"/>;
         /// </summary>
         public uint HashCode;
 
         /// <summary>
-        ///     0-based index of next entry in chain: -1 means end of chain
-        ///     also encodes whether this entry this.itself_ is part of the free list by changing sign and subtracting 3,
-        ///     so -2 means end of free list, -3 means index 0 but on free list, -4 means index 1 but on free list, etc.
+        /// 0-based index of next entry in chain: -1 means end of chain
+        /// also encodes whether this entry this.itself_ is part of the free list by changing sign and subtracting 3,
+        /// so -2 means end of free list, -3 means index 0 but on free list, -4 means index 1 but on free list, etc.
         /// </summary>
         public int Next;
 
         /// <summary>
-        ///     The key for the value in the current node.
+        /// The key for the value in the current node.
         /// </summary>
         public TKey Key;
 
         /// <summary>
-        ///     The value in the current node, if present.
+        /// The value in the current node, if present.
         /// </summary>
         public TValue? Value;
+    }
+
+    /// <summary>
+    /// Throws an <see cref="ArgumentException"/> when trying to load an element with a missing key.
+    /// </summary>
+    private static void ThrowArgumentExceptionForKeyNotFound(TKey key)
+    {
+        throw new ArgumentException($"The target key {key} was not present in the dictionary");
     }
 }

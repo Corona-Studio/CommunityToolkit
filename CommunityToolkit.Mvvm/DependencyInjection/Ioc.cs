@@ -9,51 +9,51 @@ using System.Threading;
 namespace CommunityToolkit.Mvvm.DependencyInjection;
 
 /// <summary>
-///     A type that facilitates the use of the <see cref="IServiceProvider" /> type.
-///     The <see cref="Ioc" /> provides the ability to configure services in a singleton, thread-safe
-///     service provider instance, which can then be used to resolve service instances.
-///     The first step to use this feature is to declare some services, for instance:
-///     <code>
+/// A type that facilitates the use of the <see cref="IServiceProvider"/> type.
+/// The <see cref="Ioc"/> provides the ability to configure services in a singleton, thread-safe
+/// service provider instance, which can then be used to resolve service instances.
+/// The first step to use this feature is to declare some services, for instance:
+/// <code>
 /// public interface ILogger
 /// {
 ///     void Log(string text);
 /// }
 /// </code>
-///     <code>
+/// <code>
 /// public class ConsoleLogger : ILogger
 /// {
 ///     void Log(string text) => Console.WriteLine(text);
 /// }
 /// </code>
-///     Then the services configuration should then be done at startup, by calling the <see cref="ConfigureServices" />
-///     method and passing an <see cref="IServiceProvider" /> instance with the services to use. That instance can
-///     be from any library offering dependency injection functionality, such as Microsoft.Extensions.DependencyInjection.
-///     For instance, using that library, <see cref="ConfigureServices" /> can be used as follows in this example:
-///     <code>
+/// Then the services configuration should then be done at startup, by calling the <see cref="ConfigureServices"/>
+/// method and passing an <see cref="IServiceProvider"/> instance with the services to use. That instance can
+/// be from any library offering dependency injection functionality, such as Microsoft.Extensions.DependencyInjection.
+/// For instance, using that library, <see cref="ConfigureServices"/> can be used as follows in this example:
+/// <code>
 /// Ioc.Default.ConfigureServices(
 ///     new ServiceCollection()
 ///     .AddSingleton&lt;ILogger, Logger&gt;()
 ///     .BuildServiceProvider());
 /// </code>
-///     Finally, you can use the <see cref="Ioc" /> instance (which implements <see cref="IServiceProvider" />)
-///     to retrieve the service instances from anywhere in your application, by doing as follows:
-///     <code>
+/// Finally, you can use the <see cref="Ioc"/> instance (which implements <see cref="IServiceProvider"/>)
+/// to retrieve the service instances from anywhere in your application, by doing as follows:
+/// <code>
 /// Ioc.Default.GetService&lt;ILogger&gt;().Log("Hello world!");
 /// </code>
 /// </summary>
 public sealed class Ioc : IServiceProvider
 {
     /// <summary>
-    ///     The <see cref="IServiceProvider" /> instance to use, if initialized.
-    /// </summary>
-    private volatile IServiceProvider? serviceProvider;
-
-    /// <summary>
-    ///     Gets the default <see cref="Ioc" /> instance.
+    /// Gets the default <see cref="Ioc"/> instance.
     /// </summary>
     public static Ioc Default { get; } = new();
 
-    /// <inheritdoc />
+    /// <summary>
+    /// The <see cref="IServiceProvider"/> instance to use, if initialized.
+    /// </summary>
+    private volatile IServiceProvider? serviceProvider;
+
+    /// <inheritdoc/>
     public object? GetService(Type serviceType)
     {
         ArgumentNullException.ThrowIfNull(serviceType);
@@ -80,11 +80,11 @@ public sealed class Ioc : IServiceProvider
     }
 
     /// <summary>
-    ///     Tries to resolve an instance of a specified service type.
+    /// Tries to resolve an instance of a specified service type.
     /// </summary>
     /// <typeparam name="T">The type of service to resolve.</typeparam>
-    /// <returns>An instance of the specified service, or <see langword="null" />.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the current <see cref="Ioc" /> instance has not been initialized.</exception>
+    /// <returns>An instance of the specified service, or <see langword="null"/>.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the current <see cref="Ioc"/> instance has not been initialized.</exception>
     public T? GetService<T>()
         where T : class
     {
@@ -99,13 +99,13 @@ public sealed class Ioc : IServiceProvider
     }
 
     /// <summary>
-    ///     Resolves an instance of a specified service type.
+    /// Resolves an instance of a specified service type.
     /// </summary>
     /// <typeparam name="T">The type of service to resolve.</typeparam>
-    /// <returns>An instance of the specified service, or <see langword="null" />.</returns>
+    /// <returns>An instance of the specified service, or <see langword="null"/>.</returns>
     /// <exception cref="InvalidOperationException">
-    ///     Thrown if the current <see cref="Ioc" /> instance has not been initialized, or if the
-    ///     requested service type was not registered in the service provider currently in use.
+    /// Thrown if the current <see cref="Ioc"/> instance has not been initialized, or if the
+    /// requested service type was not registered in the service provider currently in use.
     /// </exception>
     public T GetRequiredService<T>()
         where T : class
@@ -128,13 +128,10 @@ public sealed class Ioc : IServiceProvider
     }
 
     /// <summary>
-    ///     Initializes the shared <see cref="IServiceProvider" /> instance.
+    /// Initializes the shared <see cref="IServiceProvider"/> instance.
     /// </summary>
-    /// <param name="serviceProvider">The input <see cref="IServiceProvider" /> instance to use.</param>
-    /// <exception cref="System.ArgumentNullException">
-    ///     Thrown if <paramref name="serviceProvider" /> is <see langword="null" />
-    ///     .
-    /// </exception>
+    /// <param name="serviceProvider">The input <see cref="IServiceProvider"/> instance to use.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="serviceProvider"/> is <see langword="null"/>.</exception>
     public void ConfigureServices(IServiceProvider serviceProvider)
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
@@ -148,8 +145,7 @@ public sealed class Ioc : IServiceProvider
     }
 
     /// <summary>
-    ///     Throws an <see cref="InvalidOperationException" /> when the <see cref="IServiceProvider" /> property is used before
-    ///     initialization.
+    /// Throws an <see cref="InvalidOperationException"/> when the <see cref="IServiceProvider"/> property is used before initialization.
     /// </summary>
     [DoesNotReturn]
     private static void ThrowInvalidOperationExceptionForMissingInitialization()
@@ -158,8 +154,7 @@ public sealed class Ioc : IServiceProvider
     }
 
     /// <summary>
-    ///     Throws an <see cref="InvalidOperationException" /> when the <see cref="IServiceProvider" /> property is missing a
-    ///     type registration.
+    /// Throws an <see cref="InvalidOperationException"/> when the <see cref="IServiceProvider"/> property is missing a type registration.
     /// </summary>
     [DoesNotReturn]
     private static void ThrowInvalidOperationExceptionForUnregisteredType()
@@ -168,7 +163,7 @@ public sealed class Ioc : IServiceProvider
     }
 
     /// <summary>
-    ///     Throws an <see cref="InvalidOperationException" /> when a configuration is attempted more than once.
+    /// Throws an <see cref="InvalidOperationException"/> when a configuration is attempted more than once.
     /// </summary>
     [DoesNotReturn]
     private static void ThrowInvalidOperationExceptionForRepeatedConfiguration()

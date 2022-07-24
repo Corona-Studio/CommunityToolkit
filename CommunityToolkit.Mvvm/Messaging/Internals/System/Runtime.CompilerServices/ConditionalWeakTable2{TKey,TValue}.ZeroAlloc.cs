@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 #if NET6_0_OR_GREATER
+
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
@@ -430,8 +431,7 @@ internal sealed class ConditionalWeakTable2<TKey, TValue>
             int hashCode = RuntimeHelpers.GetHashCode(key) & int.MaxValue;
             int bucket = hashCode & (this.buckets.Length - 1);
 
-            for (int entriesIndex = Volatile.Read(ref this.buckets[bucket]); entriesIndex != -1; entriesIndex =
- this.entries[entriesIndex].Next)
+            for (int entriesIndex = Volatile.Read(ref this.buckets[bucket]); entriesIndex != -1; entriesIndex = this.entries[entriesIndex].Next)
             {
                 if (this.entries[entriesIndex].HashCode == hashCode)
                 {

@@ -12,34 +12,37 @@ using System.Runtime.CompilerServices;
 namespace CommunityToolkit.Mvvm.Input;
 
 /// <summary>
-///     A generic command whose sole purpose is to relay its functionality to other
-///     objects by invoking delegates. The default return value for the CanExecute
-///     method is <see langword="true" />. This class allows you to accept command parameters
-///     in the <see cref="Execute(T)" /> and <see cref="CanExecute(T)" /> callback methods.
+/// A generic command whose sole purpose is to relay its functionality to other
+/// objects by invoking delegates. The default return value for the CanExecute
+/// method is <see langword="true"/>. This class allows you to accept command parameters
+/// in the <see cref="Execute(T)"/> and <see cref="CanExecute(T)"/> callback methods.
 /// </summary>
 /// <typeparam name="T">The type of parameter being passed as input to the callbacks.</typeparam>
 public sealed class RelayCommand<T> : IRelayCommand<T>
 {
     /// <summary>
-    ///     The optional action to invoke when <see cref="CanExecute(T)" /> is used.
-    /// </summary>
-    private readonly Predicate<T?>? canExecute;
-
-    /// <summary>
-    ///     The <see cref="Action" /> to invoke when <see cref="Execute(T)" /> is used.
+    /// The <see cref="Action"/> to invoke when <see cref="Execute(T)"/> is used.
     /// </summary>
     private readonly Action<T?> execute;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="RelayCommand{T}" /> class that can always execute.
+    /// The optional action to invoke when <see cref="CanExecute(T)"/> is used.
+    /// </summary>
+    private readonly Predicate<T?>? canExecute;
+
+    /// <inheritdoc/>
+    public event EventHandler? CanExecuteChanged;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RelayCommand{T}"/> class that can always execute.
     /// </summary>
     /// <param name="execute">The execution logic.</param>
     /// <remarks>
-    ///     Due to the fact that the <see cref="System.Windows.Input.ICommand" /> interface exposes methods that accept a
-    ///     nullable <see cref="object" /> parameter, it is recommended that if <typeparamref name="T" /> is a reference type,
-    ///     you should always declare it as nullable, and to always perform checks within <paramref name="execute" />.
+    /// Due to the fact that the <see cref="System.Windows.Input.ICommand"/> interface exposes methods that accept a
+    /// nullable <see cref="object"/> parameter, it is recommended that if <typeparamref name="T"/> is a reference type,
+    /// you should always declare it as nullable, and to always perform checks within <paramref name="execute"/>.
     /// </remarks>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="execute" /> is <see langword="null" />.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="execute"/> is <see langword="null"/>.</exception>
     public RelayCommand(Action<T?> execute)
     {
         ArgumentNullException.ThrowIfNull(execute);
@@ -48,15 +51,12 @@ public sealed class RelayCommand<T> : IRelayCommand<T>
     }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="RelayCommand{T}" /> class.
+    /// Initializes a new instance of the <see cref="RelayCommand{T}"/> class.
     /// </summary>
     /// <param name="execute">The execution logic.</param>
     /// <param name="canExecute">The execution status logic.</param>
-    /// <remarks>See notes in <see cref="RelayCommand{T}(Action{T})" />.</remarks>
-    /// <exception cref="System.ArgumentNullException">
-    ///     Thrown if <paramref name="execute" /> or <paramref name="canExecute" />
-    ///     are <see langword="null" />.
-    /// </exception>
+    /// <remarks>See notes in <see cref="RelayCommand{T}(Action{T})"/>.</remarks>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="execute"/> or <paramref name="canExecute"/> are <see langword="null"/>.</exception>
     public RelayCommand(Action<T?> execute, Predicate<T?> canExecute)
     {
         ArgumentNullException.ThrowIfNull(execute);
@@ -66,23 +66,20 @@ public sealed class RelayCommand<T> : IRelayCommand<T>
         this.canExecute = canExecute;
     }
 
-    /// <inheritdoc />
-    public event EventHandler? CanExecuteChanged;
-
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public void NotifyCanExecuteChanged()
     {
         CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool CanExecute(T? parameter)
     {
         return this.canExecute?.Invoke(parameter) != false;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public bool CanExecute(object? parameter)
     {
         // Special case a null value for a value type argument type.
@@ -100,14 +97,14 @@ public sealed class RelayCommand<T> : IRelayCommand<T>
         return CanExecute(result);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Execute(T? parameter)
     {
         this.execute(parameter);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public void Execute(object? parameter)
     {
         if (!TryGetCommandArgument(parameter, out T? result))
@@ -119,10 +116,10 @@ public sealed class RelayCommand<T> : IRelayCommand<T>
     }
 
     /// <summary>
-    ///     Tries to get a command argument of compatible type <typeparamref name="T" /> from an input <see cref="object" />.
+    /// Tries to get a command argument of compatible type <typeparamref name="T"/> from an input <see cref="object"/>.
     /// </summary>
     /// <param name="parameter">The input parameter.</param>
-    /// <param name="result">The resulting <typeparamref name="T" /> value, if any.</param>
+    /// <param name="result">The resulting <typeparamref name="T"/> value, if any.</param>
     /// <returns>Whether or not a compatible command argument could be retrieved.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool TryGetCommandArgument(object? parameter, out T? result)
@@ -152,7 +149,7 @@ public sealed class RelayCommand<T> : IRelayCommand<T>
     }
 
     /// <summary>
-    ///     Throws an <see cref="ArgumentException" /> if an invalid command argument is used.
+    /// Throws an <see cref="ArgumentException"/> if an invalid command argument is used.
     /// </summary>
     /// <param name="parameter">The input parameter.</param>
     /// <exception cref="ArgumentException">Thrown with an error message to give info on the invalid parameter.</exception>
@@ -164,14 +161,10 @@ public sealed class RelayCommand<T> : IRelayCommand<T>
         {
             if (parameter is null)
             {
-                return new ArgumentException(
-                    $"Parameter \"{nameof(parameter)}\" (object) must not be null, as the command type requires an argument of type {typeof(T)}.",
-                    nameof(parameter));
+                return new ArgumentException($"Parameter \"{nameof(parameter)}\" (object) must not be null, as the command type requires an argument of type {typeof(T)}.", nameof(parameter));
             }
 
-            return new ArgumentException(
-                $"Parameter \"{nameof(parameter)}\" (object) cannot be of type {parameter.GetType()}, as the command type requires an argument of type {typeof(T)}.",
-                nameof(parameter));
+            return new ArgumentException($"Parameter \"{nameof(parameter)}\" (object) cannot be of type {parameter.GetType()}, as the command type requires an argument of type {typeof(T)}.", nameof(parameter));
         }
 
         throw GetException(parameter);
