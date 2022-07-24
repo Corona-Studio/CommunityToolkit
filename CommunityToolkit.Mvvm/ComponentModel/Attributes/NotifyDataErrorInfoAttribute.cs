@@ -7,13 +7,17 @@ using System;
 namespace CommunityToolkit.Mvvm.ComponentModel;
 
 /// <summary>
-/// An attribute that can be used to support <see cref="ObservablePropertyAttribute"/> in generated properties, when applied to
-/// fields contained in a type that is inheriting from <see cref="ObservableValidator"/> and using any validation attributes.
-/// When this attribute is used, the generated property setter will also call <see cref="ObservableValidator.ValidateProperty(object?, string)"/>.
-/// This allows generated properties to opt-in into validation behavior without having to fallback into a full explicit observable property.
-/// <para>
-/// This attribute can be used as follows:
-/// <code>
+///     An attribute that can be used to support <see cref="ObservablePropertyAttribute" /> in generated properties, when
+///     applied to
+///     fields contained in a type that is inheriting from <see cref="ObservableValidator" /> and using any validation
+///     attributes.
+///     When this attribute is used, the generated property setter will also call
+///     <see cref="ObservableValidator.ValidateProperty(object?, string)" />.
+///     This allows generated properties to opt-in into validation behavior without having to fallback into a full explicit
+///     observable property.
+///     <para>
+///         This attribute can be used as follows:
+///         <code>
 /// partial class MyViewModel : ObservableValidator
 /// {
 ///     [ObservableProperty]
@@ -23,9 +27,9 @@ namespace CommunityToolkit.Mvvm.ComponentModel;
 ///     private string username;
 /// }
 /// </code>
-/// </para>
-/// And with this, code analogous to this will be generated:
-/// <code>
+///     </para>
+///     And with this, code analogous to this will be generated:
+///     <code>
 /// partial class MyViewModel
 /// {
 ///     [Required]
@@ -38,7 +42,7 @@ namespace CommunityToolkit.Mvvm.ComponentModel;
 /// }
 /// </code>
 /// </summary>
-[AttributeUsage(AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Class, Inherited = false)]
 public sealed class NotifyDataErrorInfoAttribute : Attribute
 {
 }

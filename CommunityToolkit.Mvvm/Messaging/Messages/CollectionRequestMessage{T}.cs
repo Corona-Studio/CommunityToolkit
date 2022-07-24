@@ -10,7 +10,8 @@ using System.Runtime.CompilerServices;
 namespace CommunityToolkit.Mvvm.Messaging.Messages;
 
 /// <summary>
-/// A <see langword="class"/> for request messages that can receive multiple replies, which can either be used directly or through derived classes.
+///     A <see langword="class" /> for request messages that can receive multiple replies, which can either be used
+///     directly or through derived classes.
 /// </summary>
 /// <typeparam name="T">The type of request to make.</typeparam>
 public class CollectionRequestMessage<T> : IEnumerable<T>
@@ -18,20 +19,17 @@ public class CollectionRequestMessage<T> : IEnumerable<T>
     private readonly List<T> responses = new();
 
     /// <summary>
-    /// Gets the message responses.
+    ///     Gets the message responses.
     /// </summary>
-    public IReadOnlyCollection<T> Responses => this.responses;
-
-    /// <summary>
-    /// Replies to the current request message.
-    /// </summary>
-    /// <param name="response">The response to use to reply to the request message.</param>
-    public void Reply(T response)
+    public IReadOnlyCollection<T> Responses
     {
-        this.responses.Add(response);
+        get
+        {
+            return this.responses;
+        }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     public IEnumerator<T> GetEnumerator()
@@ -39,9 +37,18 @@ public class CollectionRequestMessage<T> : IEnumerable<T>
         return this.responses.GetEnumerator();
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return this.GetEnumerator();
+        return GetEnumerator();
+    }
+
+    /// <summary>
+    ///     Replies to the current request message.
+    /// </summary>
+    /// <param name="response">The response to use to reply to the request message.</param>
+    public void Reply(T response)
+    {
+        this.responses.Add(response);
     }
 }

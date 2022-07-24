@@ -12,18 +12,18 @@ using CommunityToolkit.Mvvm.Messaging.Internals;
 namespace CommunityToolkit.Mvvm.Messaging;
 
 /// <summary>
-/// A class providing a reference implementation for the <see cref="IMessenger"/> interface.
+///     A class providing a reference implementation for the <see cref="IMessenger" /> interface.
 /// </summary>
 /// <remarks>
-/// <para>
-/// This <see cref="IMessenger"/> implementation uses weak references to track the registered
-/// recipients, so it is not necessary to manually unregister them when they're no longer needed.
-/// </para>
-/// <para>
-/// The <see cref="WeakReferenceMessenger"/> type will automatically perform internal trimming when
-/// full GC collections are invoked, so calling <see cref="Cleanup"/> manually is not necessary to
-/// ensure that on average the internal data structures are as trimmed and compact as possible.
-/// </para>
+///     <para>
+///         This <see cref="IMessenger" /> implementation uses weak references to track the registered
+///         recipients, so it is not necessary to manually unregister them when they're no longer needed.
+///     </para>
+///     <para>
+///         The <see cref="WeakReferenceMessenger" /> type will automatically perform internal trimming when
+///         full GC collections are invoked, so calling <see cref="Cleanup" /> manually is not necessary to
+///         ensure that on average the internal data structures are as trimmed and compact as possible.
+///     </para>
 /// </remarks>
 public sealed class WeakReferenceMessenger : IMessenger
 {
@@ -58,12 +58,12 @@ public sealed class WeakReferenceMessenger : IMessenger
     // only ever be a single handler for each recipient.
 
     /// <summary>
-    /// The map of currently registered recipients for all message types.
+    ///     The map of currently registered recipients for all message types.
     /// </summary>
     private readonly Dictionary2<Type2, ConditionalWeakTable2<object, object?>> recipientsMap = new();
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="WeakReferenceMessenger"/> class.
+    ///     Initializes a new instance of the <see cref="WeakReferenceMessenger" /> class.
     /// </summary>
     public WeakReferenceMessenger()
     {
@@ -86,11 +86,11 @@ public sealed class WeakReferenceMessenger : IMessenger
     }
 
     /// <summary>
-    /// Gets the default <see cref="WeakReferenceMessenger"/> instance.
+    ///     Gets the default <see cref="WeakReferenceMessenger" /> instance.
     /// </summary>
     public static WeakReferenceMessenger Default { get; } = new();
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public bool IsRegistered<TMessage, TToken>(object recipient, TToken token)
         where TMessage : class
         where TToken : IEquatable<TToken>
@@ -122,8 +122,9 @@ public sealed class WeakReferenceMessenger : IMessenger
         }
     }
 
-    /// <inheritdoc/>
-    public void Register<TRecipient, TMessage, TToken>(TRecipient recipient, TToken token, MessageHandler<TRecipient, TMessage> handler)
+    /// <inheritdoc />
+    public void Register<TRecipient, TMessage, TToken>(TRecipient recipient, TToken token,
+        MessageHandler<TRecipient, TMessage> handler)
         where TRecipient : class
         where TMessage : class
         where TToken : IEquatable<TToken>
@@ -135,83 +136,15 @@ public sealed class WeakReferenceMessenger : IMessenger
         Register<TMessage, TToken>(recipient, token, new MessageHandlerDispatcher.For<TRecipient, TMessage>(handler));
     }
 
-    /// <summary>
-    /// Registers a recipient for a given type of message.
-    /// </summary>
-    /// <typeparam name="TMessage">The type of message to receive.</typeparam>
-    /// <typeparam name="TToken">The type of token to use to pick the messages to receive.</typeparam>
-    /// <param name="recipient">The recipient that will receive the messages.</param>
-    /// <param name="token">A token used to determine the receiving channel to use.</param>
-    /// <exception cref="InvalidOperationException">Thrown when trying to register the same message twice.</exception>
-    /// <remarks>
-    /// This method is a variation of <see cref="Register{TRecipient, TMessage, TToken}(TRecipient, TToken, MessageHandler{TRecipient, TMessage})"/>
-    /// that is specialized for recipients implementing <see cref="IRecipient{TMessage}"/>. See more comments at the top of this type, as well as
-    /// within <see cref="Send{TMessage, TToken}(TMessage, TToken)"/> and in the <see cref="MessageHandlerDispatcher"/> types.
-    /// </remarks>
-    internal void Register<TMessage, TToken>(IRecipient<TMessage> recipient, TToken token)
-        where TMessage : class
-        where TToken : IEquatable<TToken>
-    {
-        Register<TMessage, TToken>(recipient, token, null);
-    }
-
-    /// <summary>
-    /// Registers a recipient for a given type of message.
-    /// </summary>
-    /// <typeparam name="TMessage">The type of message to receive.</typeparam>
-    /// <typeparam name="TToken">The type of token to use to pick the messages to receive.</typeparam>
-    /// <param name="recipient">The recipient that will receive the messages.</param>
-    /// <param name="token">A token used to determine the receiving channel to use.</param>
-    /// <param name="dispatcher">The input <see cref="MessageHandlerDispatcher"/> instance to register, or null.</param>
-    /// <exception cref="InvalidOperationException">Thrown when trying to register the same message twice.</exception>
-    private void Register<TMessage, TToken>(object recipient, TToken token, MessageHandlerDispatcher? dispatcher)
-        where TMessage : class
-        where TToken : IEquatable<TToken>
-    {
-        lock (this.recipientsMap)
-        {
-            Type2 type2 = new(typeof(TMessage), typeof(TToken));
-
-            // Get the conditional table for the pair of type arguments, or create it if it doesn't exist
-            ref ConditionalWeakTable2<object, object?>? mapping = ref this.recipientsMap.GetOrAddValueRef(type2);
-
-            mapping ??= new ConditionalWeakTable2<object, object?>();
-
-            // Fast path for unit tokens
-            if (typeof(TToken) == typeof(Unit))
-            {
-                if (!mapping.TryAdd(recipient, dispatcher))
-                {
-                    ThrowInvalidOperationExceptionForDuplicateRegistration();
-                }
-            }
-            else
-            {
-                // Get or create the handlers dictionary for the target recipient
-                Dictionary2<TToken, object?>? map = Unsafe.As<Dictionary2<TToken, object?>>(mapping.GetValue(recipient, static _ => new Dictionary2<TToken, object?>())!);
-
-                // Add the new registration entry
-                ref object? registeredHandler = ref map.GetOrAddValueRef(token);
-
-                if (registeredHandler is not null)
-                {
-                    ThrowInvalidOperationExceptionForDuplicateRegistration();
-                }
-
-                // Store the input handler
-                registeredHandler = dispatcher;
-            }
-        }
-    }
-
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public void UnregisterAll(object recipient)
     {
         ArgumentNullException.ThrowIfNull(recipient);
 
         lock (this.recipientsMap)
         {
-            Dictionary2<Type2, ConditionalWeakTable2<object, object?>>.Enumerator enumerator = this.recipientsMap.GetEnumerator();
+            Dictionary2<Type2, ConditionalWeakTable2<object, object?>>.Enumerator enumerator =
+                this.recipientsMap.GetEnumerator();
 
             // Traverse all the existing conditional tables and remove all the ones
             // with the target recipient as key. We don't perform a cleanup here,
@@ -223,7 +156,7 @@ public sealed class WeakReferenceMessenger : IMessenger
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public void UnregisterAll<TToken>(object recipient, TToken token)
         where TToken : IEquatable<TToken>
     {
@@ -239,7 +172,8 @@ public sealed class WeakReferenceMessenger : IMessenger
 
         lock (this.recipientsMap)
         {
-            Dictionary2<Type2, ConditionalWeakTable2<object, object?>>.Enumerator enumerator = this.recipientsMap.GetEnumerator();
+            Dictionary2<Type2, ConditionalWeakTable2<object, object?>>.Enumerator enumerator =
+                this.recipientsMap.GetEnumerator();
 
             // Same as above, with the difference being that this time we only go through
             // the conditional tables having a matching token type as key, and that we
@@ -257,7 +191,7 @@ public sealed class WeakReferenceMessenger : IMessenger
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public void Unregister<TMessage, TToken>(object recipient, TToken token)
         where TMessage : class
         where TToken : IEquatable<TToken>
@@ -285,7 +219,7 @@ public sealed class WeakReferenceMessenger : IMessenger
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public TMessage Send<TMessage, TToken>(TMessage message, TToken token)
         where TMessage : class
         where TToken : IEquatable<TToken>
@@ -350,19 +284,111 @@ public sealed class WeakReferenceMessenger : IMessenger
         return message;
     }
 
+    /// <inheritdoc />
+    public void Cleanup()
+    {
+        lock (this.recipientsMap)
+        {
+            CleanupWithoutLock();
+        }
+    }
+
+    /// <inheritdoc />
+    public void Reset()
+    {
+        lock (this.recipientsMap)
+        {
+            this.recipientsMap.Clear();
+        }
+    }
+
     /// <summary>
-    /// Implements the broadcasting logic for <see cref="Send{TMessage, TToken}(TMessage, TToken)"/>.
+    ///     Registers a recipient for a given type of message.
+    /// </summary>
+    /// <typeparam name="TMessage">The type of message to receive.</typeparam>
+    /// <typeparam name="TToken">The type of token to use to pick the messages to receive.</typeparam>
+    /// <param name="recipient">The recipient that will receive the messages.</param>
+    /// <param name="token">A token used to determine the receiving channel to use.</param>
+    /// <exception cref="InvalidOperationException">Thrown when trying to register the same message twice.</exception>
+    /// <remarks>
+    ///     This method is a variation of
+    ///     <see cref="Register{TRecipient, TMessage, TToken}(TRecipient, TToken, MessageHandler{TRecipient, TMessage})" />
+    ///     that is specialized for recipients implementing <see cref="IRecipient{TMessage}" />. See more comments at the top
+    ///     of this type, as well as
+    ///     within <see cref="Send{TMessage, TToken}(TMessage, TToken)" /> and in the <see cref="MessageHandlerDispatcher" />
+    ///     types.
+    /// </remarks>
+    internal void Register<TMessage, TToken>(IRecipient<TMessage> recipient, TToken token)
+        where TMessage : class
+        where TToken : IEquatable<TToken>
+    {
+        Register<TMessage, TToken>(recipient, token, null);
+    }
+
+    /// <summary>
+    ///     Registers a recipient for a given type of message.
+    /// </summary>
+    /// <typeparam name="TMessage">The type of message to receive.</typeparam>
+    /// <typeparam name="TToken">The type of token to use to pick the messages to receive.</typeparam>
+    /// <param name="recipient">The recipient that will receive the messages.</param>
+    /// <param name="token">A token used to determine the receiving channel to use.</param>
+    /// <param name="dispatcher">The input <see cref="MessageHandlerDispatcher" /> instance to register, or null.</param>
+    /// <exception cref="InvalidOperationException">Thrown when trying to register the same message twice.</exception>
+    private void Register<TMessage, TToken>(object recipient, TToken token, MessageHandlerDispatcher? dispatcher)
+        where TMessage : class
+        where TToken : IEquatable<TToken>
+    {
+        lock (this.recipientsMap)
+        {
+            Type2 type2 = new(typeof(TMessage), typeof(TToken));
+
+            // Get the conditional table for the pair of type arguments, or create it if it doesn't exist
+            ref ConditionalWeakTable2<object, object?>? mapping = ref this.recipientsMap.GetOrAddValueRef(type2);
+
+            mapping ??= new ConditionalWeakTable2<object, object?>();
+
+            // Fast path for unit tokens
+            if (typeof(TToken) == typeof(Unit))
+            {
+                if (!mapping.TryAdd(recipient, dispatcher))
+                {
+                    ThrowInvalidOperationExceptionForDuplicateRegistration();
+                }
+            }
+            else
+            {
+                // Get or create the handlers dictionary for the target recipient
+                Dictionary2<TToken, object?>? map =
+                    Unsafe.As<Dictionary2<TToken, object?>>(mapping.GetValue(recipient,
+                        static _ => new Dictionary2<TToken, object?>())!);
+
+                // Add the new registration entry
+                ref object? registeredHandler = ref map.GetOrAddValueRef(token);
+
+                if (registeredHandler is not null)
+                {
+                    ThrowInvalidOperationExceptionForDuplicateRegistration();
+                }
+
+                // Store the input handler
+                registeredHandler = dispatcher;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Implements the broadcasting logic for <see cref="Send{TMessage, TToken}(TMessage, TToken)" />.
     /// </summary>
     /// <typeparam name="TMessage"></typeparam>
     /// <param name="pairs"></param>
     /// <param name="i"></param>
     /// <param name="message"></param>
     /// <remarks>
-    /// This method is not a local function to avoid triggering multiple compilations due to <c>TToken</c>
-    /// potentially being a value type, which results in specialized code due to reified generics. This is
-    /// necessary to work around a Roslyn limitation that causes unnecessary type parameters in local
-    /// functions not to be discarded in the synthesized methods. Additionally, keeping this loop outside
-    /// of the EH block (the <see langword="try"/> block) can help result in slightly better codegen.
+    ///     This method is not a local function to avoid triggering multiple compilations due to <c>TToken</c>
+    ///     potentially being a value type, which results in specialized code due to reified generics. This is
+    ///     necessary to work around a Roslyn limitation that causes unnecessary type parameters in local
+    ///     functions not to be discarded in the synthesized methods. Additionally, keeping this loop outside
+    ///     of the EH block (the <see langword="try" /> block) can help result in slightly better codegen.
     /// </remarks>
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void SendAll<TMessage>(ReadOnlySpan<object?> pairs, int i, TMessage message)
@@ -419,27 +445,9 @@ public sealed class WeakReferenceMessenger : IMessenger
         }
     }
 
-    /// <inheritdoc/>
-    public void Cleanup()
-    {
-        lock (this.recipientsMap)
-        {
-            CleanupWithoutLock();
-        }
-    }
-
-    /// <inheritdoc/>
-    public void Reset()
-    {
-        lock (this.recipientsMap)
-        {
-            this.recipientsMap.Clear();
-        }
-    }
-
     /// <summary>
-    /// Executes a cleanup without locking the current instance. This method has to be
-    /// invoked when a lock on <see cref="recipientsMap"/> has already been acquired.
+    ///     Executes a cleanup without locking the current instance. This method has to be
+    ///     invoked when a lock on <see cref="recipientsMap" /> has already been acquired.
     /// </summary>
     private void CleanupWithNonBlockingLock()
     {
@@ -465,15 +473,16 @@ public sealed class WeakReferenceMessenger : IMessenger
     }
 
     /// <summary>
-    /// Executes a cleanup without locking the current instance. This method has to be
-    /// invoked when a lock on <see cref="recipientsMap"/> has already been acquired.
+    ///     Executes a cleanup without locking the current instance. This method has to be
+    ///     invoked when a lock on <see cref="recipientsMap" /> has already been acquired.
     /// </summary>
     private void CleanupWithoutLock()
     {
         using ArrayPoolBufferWriter<Type2> type2s = ArrayPoolBufferWriter<Type2>.Create();
         using ArrayPoolBufferWriter<object> emptyRecipients = ArrayPoolBufferWriter<object>.Create();
 
-        Dictionary2<Type2, ConditionalWeakTable2<object, object?>>.Enumerator type2Enumerator = this.recipientsMap.GetEnumerator();
+        Dictionary2<Type2, ConditionalWeakTable2<object, object?>>.Enumerator type2Enumerator =
+            this.recipientsMap.GetEnumerator();
 
         // First, we go through all the currently registered pairs of token and message types.
         // These represents all the combinations of generic arguments with at least one registered
@@ -489,7 +498,8 @@ public sealed class WeakReferenceMessenger : IMessenger
                 // When the token type is unit, there can be no registered recipients with no handlers,
                 // as when the single handler is unsubscribed the recipient is also removed immediately.
                 // Therefore, we need to check that there exists at least one recipient for the message.
-                using ConditionalWeakTable2<object, object?>.Enumerator recipientsEnumerator = type2Enumerator.GetValue().GetEnumerator();
+                using ConditionalWeakTable2<object, object?>.Enumerator recipientsEnumerator =
+                    type2Enumerator.GetValue().GetEnumerator();
 
                 while (recipientsEnumerator.MoveNext())
                 {
@@ -502,7 +512,8 @@ public sealed class WeakReferenceMessenger : IMessenger
             {
                 // Go through the currently alive recipients to look for those with no handlers left. We track
                 // the ones we find to remove them outside of the loop (can't modify during enumeration).
-                using (ConditionalWeakTable2<object, object?>.Enumerator recipientsEnumerator = type2Enumerator.GetValue().GetEnumerator())
+                using (ConditionalWeakTable2<object, object?>.Enumerator recipientsEnumerator =
+                       type2Enumerator.GetValue().GetEnumerator())
                 {
                     while (recipientsEnumerator.MoveNext())
                     {
@@ -539,7 +550,7 @@ public sealed class WeakReferenceMessenger : IMessenger
     }
 
     /// <summary>
-    /// Throws an <see cref="InvalidOperationException"/> when trying to add a duplicate handler.
+    ///     Throws an <see cref="InvalidOperationException" /> when trying to add a duplicate handler.
     /// </summary>
     private static void ThrowInvalidOperationExceptionForDuplicateRegistration()
     {

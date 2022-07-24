@@ -16,58 +16,62 @@ using System.Runtime.CompilerServices;
 namespace CommunityToolkit.Mvvm.ComponentModel;
 
 /// <summary>
-/// A base class for objects implementing the <see cref="INotifyDataErrorInfo"/> interface. This class
-/// also inherits from <see cref="ObservableObject"/>, so it can be used for observable items too.
+///     A base class for objects implementing the <see cref="INotifyDataErrorInfo" /> interface. This class
+///     also inherits from <see cref="ObservableObject" />, so it can be used for observable items too.
 /// </summary>
 public abstract class ObservableValidator : ObservableObject, INotifyDataErrorInfo
 {
     /// <summary>
-    /// The <see cref="ConditionalWeakTable{TKey,TValue}"/> instance used to track compiled delegates to validate entities.
+    ///     The <see cref="ConditionalWeakTable{TKey,TValue}" /> instance used to track compiled delegates to validate
+    ///     entities.
     /// </summary>
     private static readonly ConditionalWeakTable<Type, Action<object>> EntityValidatorMap = new();
 
     /// <summary>
-    /// The <see cref="ConditionalWeakTable{TKey, TValue}"/> instance used to track display names for properties to validate.
+    ///     The <see cref="ConditionalWeakTable{TKey, TValue}" /> instance used to track display names for properties to
+    ///     validate.
     /// </summary>
     /// <remarks>
-    /// This is necessary because we want to reuse the same <see cref="ValidationContext"/> instance for all validations, but
-    /// with the same behavior with respect to formatted names that new instances would have provided. The issue is that the
-    /// <see cref="ValidationContext.DisplayName"/> property is not refreshed when we set <see cref="ValidationContext.MemberName"/>,
-    /// so we need to replicate the same logic to retrieve the right display name for properties to validate and update that
-    /// property manually right before passing the context to <see cref="Validator"/> and proceed with the normal functionality.
+    ///     This is necessary because we want to reuse the same <see cref="ValidationContext" /> instance for all validations,
+    ///     but
+    ///     with the same behavior with respect to formatted names that new instances would have provided. The issue is that
+    ///     the
+    ///     <see cref="ValidationContext.DisplayName" /> property is not refreshed when we set
+    ///     <see cref="ValidationContext.MemberName" />,
+    ///     so we need to replicate the same logic to retrieve the right display name for properties to validate and update
+    ///     that
+    ///     property manually right before passing the context to <see cref="Validator" /> and proceed with the normal
+    ///     functionality.
     /// </remarks>
     private static readonly ConditionalWeakTable<Type, Dictionary<string, string>> DisplayNamesMap = new();
 
     /// <summary>
-    /// The cached <see cref="PropertyChangedEventArgs"/> for <see cref="HasErrors"/>.
+    ///     The cached <see cref="PropertyChangedEventArgs" /> for <see cref="HasErrors" />.
     /// </summary>
     private static readonly PropertyChangedEventArgs HasErrorsChangedEventArgs = new(nameof(HasErrors));
 
     /// <summary>
-    /// The <see cref="ValidationContext"/> instance currently in use.
-    /// </summary>
-    private readonly ValidationContext validationContext;
-
-    /// <summary>
-    /// The <see cref="Dictionary{TKey,TValue}"/> instance used to store previous validation results.
+    ///     The <see cref="Dictionary{TKey,TValue}" /> instance used to store previous validation results.
     /// </summary>
     private readonly Dictionary<string, List<ValidationResult>> errors = new();
 
     /// <summary>
-    /// Indicates the total number of properties with errors (not total errors).
-    /// This is used to allow <see cref="HasErrors"/> to operate in O(1) time, as it can just
-    /// check whether this value is not 0 instead of having to traverse <see cref="errors"/>.
+    ///     The <see cref="ValidationContext" /> instance currently in use.
+    /// </summary>
+    private readonly ValidationContext validationContext;
+
+    /// <summary>
+    ///     Indicates the total number of properties with errors (not total errors).
+    ///     This is used to allow <see cref="HasErrors" /> to operate in O(1) time, as it can just
+    ///     check whether this value is not 0 instead of having to traverse <see cref="errors" />.
     /// </summary>
     private int totalErrors;
 
-    /// <inheritdoc/>
-    public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="ObservableValidator"/> class.
-    /// This constructor will create a new <see cref="ValidationContext"/> that will
-    /// be used to validate all properties, which will reference the current instance
-    /// and no additional services or validation properties and settings.
+    ///     Initializes a new instance of the <see cref="ObservableValidator" /> class.
+    ///     This constructor will create a new <see cref="ValidationContext" /> that will
+    ///     be used to validate all properties, which will reference the current instance
+    ///     and no additional services or validation properties and settings.
     /// </summary>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
     protected ObservableValidator()
@@ -76,9 +80,9 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ObservableValidator"/> class.
-    /// This constructor will create a new <see cref="ValidationContext"/> that will
-    /// be used to validate all properties, which will reference the current instance.
+    ///     Initializes a new instance of the <see cref="ObservableValidator" /> class.
+    ///     This constructor will create a new <see cref="ValidationContext" /> that will
+    ///     be used to validate all properties, which will reference the current instance.
     /// </summary>
     /// <param name="items">A set of key/value pairs to make available to consumers.</param>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
@@ -88,11 +92,11 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ObservableValidator"/> class.
-    /// This constructor will create a new <see cref="ValidationContext"/> that will
-    /// be used to validate all properties, which will reference the current instance.
+    ///     Initializes a new instance of the <see cref="ObservableValidator" /> class.
+    ///     This constructor will create a new <see cref="ValidationContext" /> that will
+    ///     be used to validate all properties, which will reference the current instance.
     /// </summary>
-    /// <param name="serviceProvider">An <see cref="IServiceProvider"/> instance to make available during validation.</param>
+    /// <param name="serviceProvider">An <see cref="IServiceProvider" /> instance to make available during validation.</param>
     /// <param name="items">A set of key/value pairs to make available to consumers.</param>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
     protected ObservableValidator(IServiceProvider? serviceProvider, IDictionary<object, object?>? items)
@@ -101,20 +105,27 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ObservableValidator"/> class.
-    /// This constructor will store the input <see cref="ValidationContext"/> instance,
-    /// and it will use it to validate all properties for the current viewmodel.
+    ///     Initializes a new instance of the <see cref="ObservableValidator" /> class.
+    ///     This constructor will store the input <see cref="ValidationContext" /> instance,
+    ///     and it will use it to validate all properties for the current viewmodel.
     /// </summary>
     /// <param name="validationContext">
-    /// The <see cref="ValidationContext"/> instance to use to validate properties.
-    /// <para>
-    /// This instance will be passed to all <see cref="Validator.TryValidateObject(object, ValidationContext, ICollection{ValidationResult})"/>
-    /// calls executed by the current viewmodel, and its <see cref="ValidationContext.MemberName"/> property will be updated every time
-    /// before the call is made to set the name of the property being validated. The property name will not be reset after that, so the
-    /// value of <see cref="ValidationContext.MemberName"/> will always indicate the name of the last property that was validated, if any.
-    /// </para>
+    ///     The <see cref="ValidationContext" /> instance to use to validate properties.
+    ///     <para>
+    ///         This instance will be passed to all
+    ///         <see cref="Validator.TryValidateObject(object, ValidationContext, ICollection{ValidationResult})" />
+    ///         calls executed by the current viewmodel, and its <see cref="ValidationContext.MemberName" /> property will be
+    ///         updated every time
+    ///         before the call is made to set the name of the property being validated. The property name will not be reset
+    ///         after that, so the
+    ///         value of <see cref="ValidationContext.MemberName" /> will always indicate the name of the last property that
+    ///         was validated, if any.
+    ///     </para>
     /// </param>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="validationContext"/> is <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="validationContext" /> is
+    ///     <see langword="null" />.
+    /// </exception>
     protected ObservableValidator(ValidationContext validationContext)
     {
         ArgumentNullException.ThrowIfNull(validationContext);
@@ -122,30 +133,46 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
         this.validationContext = validationContext;
     }
 
-    /// <inheritdoc/>
-    public bool HasErrors => this.totalErrors > 0;
+    /// <inheritdoc />
+    public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+
+    /// <inheritdoc />
+    public bool HasErrors
+    {
+        get
+        {
+            return this.totalErrors > 0;
+        }
+    }
+
+    /// <inheritdoc />
+    IEnumerable INotifyDataErrorInfo.GetErrors(string? propertyName)
+    {
+        return GetErrors(propertyName);
+    }
 
     /// <summary>
-    /// Compares the current and new values for a given property. If the value has changed,
-    /// raises the <see cref="ObservableObject.PropertyChanging"/> event, updates the property with
-    /// the new value, then raises the <see cref="ObservableObject.PropertyChanged"/> event.
+    ///     Compares the current and new values for a given property. If the value has changed,
+    ///     raises the <see cref="ObservableObject.PropertyChanging" /> event, updates the property with
+    ///     the new value, then raises the <see cref="ObservableObject.PropertyChanged" /> event.
     /// </summary>
     /// <typeparam name="T">The type of the property that changed.</typeparam>
     /// <param name="field">The field storing the property's value.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
-    /// <param name="validate">If <see langword="true"/>, <paramref name="newValue"/> will also be validated.</param>
+    /// <param name="validate">If <see langword="true" />, <paramref name="newValue" /> will also be validated.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
-    /// <returns><see langword="true"/> if the property was changed, <see langword="false"/> otherwise.</returns>
+    /// <returns><see langword="true" /> if the property was changed, <see langword="false" /> otherwise.</returns>
     /// <remarks>
-    /// This method is just like <see cref="ObservableObject.SetProperty{T}(ref T,T,string)"/>, just with the addition
-    /// of the <paramref name="validate"/> parameter. If that is set to <see langword="true"/>, the new value will be
-    /// validated and <see cref="ErrorsChanged"/> will be raised if needed. Following the behavior of the base method,
-    /// the <see cref="ObservableObject.PropertyChanging"/> and <see cref="ObservableObject.PropertyChanged"/> events
-    /// are not raised if the current and new value for the target property are the same.
+    ///     This method is just like <see cref="ObservableObject.SetProperty{T}(ref T,T,string)" />, just with the addition
+    ///     of the <paramref name="validate" /> parameter. If that is set to <see langword="true" />, the new value will be
+    ///     validated and <see cref="ErrorsChanged" /> will be raised if needed. Following the behavior of the base method,
+    ///     the <see cref="ObservableObject.PropertyChanging" /> and <see cref="ObservableObject.PropertyChanged" /> events
+    ///     are not raised if the current and new value for the target property are the same.
     /// </remarks>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="propertyName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="propertyName" /> is <see langword="null" />.</exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool SetProperty<T>([NotNullIfNotNull("newValue")] ref T field, T newValue, bool validate, [CallerMemberName] string propertyName = null!)
+    protected bool SetProperty<T>([NotNullIfNotNull("newValue")] ref T field, T newValue, bool validate,
+        [CallerMemberName] string propertyName = null!)
     {
         ArgumentNullException.ThrowIfNull(propertyName);
 
@@ -160,21 +187,25 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Compares the current and new values for a given property. If the value has changed,
-    /// raises the <see cref="ObservableObject.PropertyChanging"/> event, updates the property with
-    /// the new value, then raises the <see cref="ObservableObject.PropertyChanged"/> event.
-    /// See additional notes about this overload in <see cref="SetProperty{T}(ref T,T,bool,string)"/>.
+    ///     Compares the current and new values for a given property. If the value has changed,
+    ///     raises the <see cref="ObservableObject.PropertyChanging" /> event, updates the property with
+    ///     the new value, then raises the <see cref="ObservableObject.PropertyChanged" /> event.
+    ///     See additional notes about this overload in <see cref="SetProperty{T}(ref T,T,bool,string)" />.
     /// </summary>
     /// <typeparam name="T">The type of the property that changed.</typeparam>
     /// <param name="field">The field storing the property's value.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
-    /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> instance to use to compare the input values.</param>
-    /// <param name="validate">If <see langword="true"/>, <paramref name="newValue"/> will also be validated.</param>
+    /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> instance to use to compare the input values.</param>
+    /// <param name="validate">If <see langword="true" />, <paramref name="newValue" /> will also be validated.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
-    /// <returns><see langword="true"/> if the property was changed, <see langword="false"/> otherwise.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="comparer"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <returns><see langword="true" /> if the property was changed, <see langword="false" /> otherwise.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="comparer" /> or
+    ///     <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool SetProperty<T>([NotNullIfNotNull("newValue")] ref T field, T newValue, IEqualityComparer<T> comparer, bool validate, [CallerMemberName] string propertyName = null!)
+    protected bool SetProperty<T>([NotNullIfNotNull("newValue")] ref T field, T newValue, IEqualityComparer<T> comparer,
+        bool validate, [CallerMemberName] string propertyName = null!)
     {
         ArgumentNullException.ThrowIfNull(comparer);
         ArgumentNullException.ThrowIfNull(propertyName);
@@ -190,28 +221,33 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Compares the current and new values for a given property. If the value has changed,
-    /// raises the <see cref="ObservableObject.PropertyChanging"/> event, updates the property with
-    /// the new value, then raises the <see cref="ObservableObject.PropertyChanged"/> event. Similarly to
-    /// the <see cref="ObservableObject.SetProperty{T}(T,T,Action{T},string)"/> method, this overload should only be
-    /// used when <see cref="ObservableObject.SetProperty{T}(ref T,T,string)"/> can't be used directly.
+    ///     Compares the current and new values for a given property. If the value has changed,
+    ///     raises the <see cref="ObservableObject.PropertyChanging" /> event, updates the property with
+    ///     the new value, then raises the <see cref="ObservableObject.PropertyChanged" /> event. Similarly to
+    ///     the <see cref="ObservableObject.SetProperty{T}(T,T,Action{T},string)" /> method, this overload should only be
+    ///     used when <see cref="ObservableObject.SetProperty{T}(ref T,T,string)" /> can't be used directly.
     /// </summary>
     /// <typeparam name="T">The type of the property that changed.</typeparam>
     /// <param name="oldValue">The current property value.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
     /// <param name="callback">A callback to invoke to update the property value.</param>
-    /// <param name="validate">If <see langword="true"/>, <paramref name="newValue"/> will also be validated.</param>
+    /// <param name="validate">If <see langword="true" />, <paramref name="newValue" /> will also be validated.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
-    /// <returns><see langword="true"/> if the property was changed, <see langword="false"/> otherwise.</returns>
+    /// <returns><see langword="true" /> if the property was changed, <see langword="false" /> otherwise.</returns>
     /// <remarks>
-    /// This method is just like <see cref="ObservableObject.SetProperty{T}(T,T,Action{T},string)"/>, just with the addition
-    /// of the <paramref name="validate"/> parameter. As such, following the behavior of the base method,
-    /// the <see cref="ObservableObject.PropertyChanging"/> and <see cref="ObservableObject.PropertyChanged"/> events
-    /// are not raised if the current and new value for the target property are the same.
+    ///     This method is just like <see cref="ObservableObject.SetProperty{T}(T,T,Action{T},string)" />, just with the
+    ///     addition
+    ///     of the <paramref name="validate" /> parameter. As such, following the behavior of the base method,
+    ///     the <see cref="ObservableObject.PropertyChanging" /> and <see cref="ObservableObject.PropertyChanged" /> events
+    ///     are not raised if the current and new value for the target property are the same.
     /// </remarks>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="callback"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="callback" /> or
+    ///     <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool SetProperty<T>(T oldValue, T newValue, Action<T> callback, bool validate, [CallerMemberName] string propertyName = null!)
+    protected bool SetProperty<T>(T oldValue, T newValue, Action<T> callback, bool validate,
+        [CallerMemberName] string propertyName = null!)
     {
         ArgumentNullException.ThrowIfNull(callback);
         ArgumentNullException.ThrowIfNull(propertyName);
@@ -227,22 +263,26 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Compares the current and new values for a given property. If the value has changed,
-    /// raises the <see cref="ObservableObject.PropertyChanging"/> event, updates the property with
-    /// the new value, then raises the <see cref="ObservableObject.PropertyChanged"/> event.
-    /// See additional notes about this overload in <see cref="SetProperty{T}(T,T,Action{T},bool,string)"/>.
+    ///     Compares the current and new values for a given property. If the value has changed,
+    ///     raises the <see cref="ObservableObject.PropertyChanging" /> event, updates the property with
+    ///     the new value, then raises the <see cref="ObservableObject.PropertyChanged" /> event.
+    ///     See additional notes about this overload in <see cref="SetProperty{T}(T,T,Action{T},bool,string)" />.
     /// </summary>
     /// <typeparam name="T">The type of the property that changed.</typeparam>
     /// <param name="oldValue">The current property value.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
-    /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> instance to use to compare the input values.</param>
+    /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> instance to use to compare the input values.</param>
     /// <param name="callback">A callback to invoke to update the property value.</param>
-    /// <param name="validate">If <see langword="true"/>, <paramref name="newValue"/> will also be validated.</param>
+    /// <param name="validate">If <see langword="true" />, <paramref name="newValue" /> will also be validated.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
-    /// <returns><see langword="true"/> if the property was changed, <see langword="false"/> otherwise.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="comparer"/>, <paramref name="callback"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <returns><see langword="true" /> if the property was changed, <see langword="false" /> otherwise.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="comparer" />, <paramref name="callback" /> or
+    ///     <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool SetProperty<T>(T oldValue, T newValue, IEqualityComparer<T> comparer, Action<T> callback, bool validate, [CallerMemberName] string propertyName = null!)
+    protected bool SetProperty<T>(T oldValue, T newValue, IEqualityComparer<T> comparer, Action<T> callback,
+        bool validate, [CallerMemberName] string propertyName = null!)
     {
         ArgumentNullException.ThrowIfNull(comparer);
         ArgumentNullException.ThrowIfNull(callback);
@@ -259,12 +299,13 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Compares the current and new values for a given nested property. If the value has changed,
-    /// raises the <see cref="ObservableObject.PropertyChanging"/> event, updates the property and then raises the
-    /// <see cref="ObservableObject.PropertyChanged"/> event. The behavior mirrors that of
-    /// <see cref="ObservableObject.SetProperty{TModel,T}(T,T,TModel,Action{TModel,T},string)"/>, with the difference being that this
-    /// method is used to relay properties from a wrapped model in the current instance. For more info, see the docs for
-    /// <see cref="ObservableObject.SetProperty{TModel,T}(T,T,TModel,Action{TModel,T},string)"/>.
+    ///     Compares the current and new values for a given nested property. If the value has changed,
+    ///     raises the <see cref="ObservableObject.PropertyChanging" /> event, updates the property and then raises the
+    ///     <see cref="ObservableObject.PropertyChanged" /> event. The behavior mirrors that of
+    ///     <see cref="ObservableObject.SetProperty{TModel,T}(T,T,TModel,Action{TModel,T},string)" />, with the difference
+    ///     being that this
+    ///     method is used to relay properties from a wrapped model in the current instance. For more info, see the docs for
+    ///     <see cref="ObservableObject.SetProperty{TModel,T}(T,T,TModel,Action{TModel,T},string)" />.
     /// </summary>
     /// <typeparam name="TModel">The type of model whose property (or field) to set.</typeparam>
     /// <typeparam name="T">The type of property (or field) to set.</typeparam>
@@ -272,12 +313,16 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     /// <param name="newValue">The property's value after the change occurred.</param>
     /// <param name="model">The model </param>
     /// <param name="callback">The callback to invoke to set the target property value, if a change has occurred.</param>
-    /// <param name="validate">If <see langword="true"/>, <paramref name="newValue"/> will also be validated.</param>
+    /// <param name="validate">If <see langword="true" />, <paramref name="newValue" /> will also be validated.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
-    /// <returns><see langword="true"/> if the property was changed, <see langword="false"/> otherwise.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="model"/>, <paramref name="callback"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <returns><see langword="true" /> if the property was changed, <see langword="false" /> otherwise.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="model" />, <paramref name="callback" /> or
+    ///     <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool SetProperty<TModel, T>(T oldValue, T newValue, TModel model, Action<TModel, T> callback, bool validate, [CallerMemberName] string propertyName = null!)
+    protected bool SetProperty<TModel, T>(T oldValue, T newValue, TModel model, Action<TModel, T> callback,
+        bool validate, [CallerMemberName] string propertyName = null!)
         where TModel : class
     {
         ArgumentNullException.ThrowIfNull(model);
@@ -295,27 +340,31 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Compares the current and new values for a given nested property. If the value has changed,
-    /// raises the <see cref="ObservableObject.PropertyChanging"/> event, updates the property and then raises the
-    /// <see cref="ObservableObject.PropertyChanged"/> event. The behavior mirrors that of
-    /// <see cref="ObservableObject.SetProperty{TModel,T}(T,T,IEqualityComparer{T},TModel,Action{TModel,T},string)"/>,
-    /// with the difference being that this method is used to relay properties from a wrapped model in the
-    /// current instance. For more info, see the docs for
-    /// <see cref="ObservableObject.SetProperty{TModel,T}(T,T,IEqualityComparer{T},TModel,Action{TModel,T},string)"/>.
+    ///     Compares the current and new values for a given nested property. If the value has changed,
+    ///     raises the <see cref="ObservableObject.PropertyChanging" /> event, updates the property and then raises the
+    ///     <see cref="ObservableObject.PropertyChanged" /> event. The behavior mirrors that of
+    ///     <see cref="ObservableObject.SetProperty{TModel,T}(T,T,IEqualityComparer{T},TModel,Action{TModel,T},string)" />,
+    ///     with the difference being that this method is used to relay properties from a wrapped model in the
+    ///     current instance. For more info, see the docs for
+    ///     <see cref="ObservableObject.SetProperty{TModel,T}(T,T,IEqualityComparer{T},TModel,Action{TModel,T},string)" />.
     /// </summary>
     /// <typeparam name="TModel">The type of model whose property (or field) to set.</typeparam>
     /// <typeparam name="T">The type of property (or field) to set.</typeparam>
     /// <param name="oldValue">The current property value.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
-    /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> instance to use to compare the input values.</param>
+    /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> instance to use to compare the input values.</param>
     /// <param name="model">The model </param>
     /// <param name="callback">The callback to invoke to set the target property value, if a change has occurred.</param>
-    /// <param name="validate">If <see langword="true"/>, <paramref name="newValue"/> will also be validated.</param>
+    /// <param name="validate">If <see langword="true" />, <paramref name="newValue" /> will also be validated.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
-    /// <returns><see langword="true"/> if the property was changed, <see langword="false"/> otherwise.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="comparer"/>, <paramref name="model"/>, <paramref name="callback"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <returns><see langword="true" /> if the property was changed, <see langword="false" /> otherwise.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="comparer" />, <paramref name="model" />,
+    ///     <paramref name="callback" /> or <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool SetProperty<TModel, T>(T oldValue, T newValue, IEqualityComparer<T> comparer, TModel model, Action<TModel, T> callback, bool validate, [CallerMemberName] string propertyName = null!)
+    protected bool SetProperty<TModel, T>(T oldValue, T newValue, IEqualityComparer<T> comparer, TModel model,
+        Action<TModel, T> callback, bool validate, [CallerMemberName] string propertyName = null!)
         where TModel : class
     {
         ArgumentNullException.ThrowIfNull(comparer);
@@ -334,8 +383,8 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Tries to validate a new value for a specified property. If the validation is successful,
-    /// <see cref="ObservableObject.SetProperty{T}(ref T,T,string?)"/> is called, otherwise no state change is performed.
+    ///     Tries to validate a new value for a specified property. If the validation is successful,
+    ///     <see cref="ObservableObject.SetProperty{T}(ref T,T,string?)" /> is called, otherwise no state change is performed.
     /// </summary>
     /// <typeparam name="T">The type of the property that changed.</typeparam>
     /// <param name="field">The field storing the property's value.</param>
@@ -343,9 +392,10 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     /// <param name="errors">The resulting validation errors, if any.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
     /// <returns>Whether the validation was successful and the property value changed as well.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="propertyName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="propertyName" /> is <see langword="null" />.</exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool TrySetProperty<T>(ref T field, T newValue, out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
+    protected bool TrySetProperty<T>(ref T field, T newValue, out IReadOnlyCollection<ValidationResult> errors,
+        [CallerMemberName] string propertyName = null!)
     {
         ArgumentNullException.ThrowIfNull(propertyName);
 
@@ -354,19 +404,24 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Tries to validate a new value for a specified property. If the validation is successful,
-    /// <see cref="ObservableObject.SetProperty{T}(ref T,T,IEqualityComparer{T},string?)"/> is called, otherwise no state change is performed.
+    ///     Tries to validate a new value for a specified property. If the validation is successful,
+    ///     <see cref="ObservableObject.SetProperty{T}(ref T,T,IEqualityComparer{T},string?)" /> is called, otherwise no state
+    ///     change is performed.
     /// </summary>
     /// <typeparam name="T">The type of the property that changed.</typeparam>
     /// <param name="field">The field storing the property's value.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
-    /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> instance to use to compare the input values.</param>
+    /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> instance to use to compare the input values.</param>
     /// <param name="errors">The resulting validation errors, if any.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
     /// <returns>Whether the validation was successful and the property value changed as well.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="comparer"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="comparer" /> or
+    ///     <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool TrySetProperty<T>(ref T field, T newValue, IEqualityComparer<T> comparer, out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
+    protected bool TrySetProperty<T>(ref T field, T newValue, IEqualityComparer<T> comparer,
+        out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
     {
         ArgumentNullException.ThrowIfNull(comparer);
         ArgumentNullException.ThrowIfNull(propertyName);
@@ -376,8 +431,9 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Tries to validate a new value for a specified property. If the validation is successful,
-    /// <see cref="ObservableObject.SetProperty{T}(T,T,Action{T},string?)"/> is called, otherwise no state change is performed.
+    ///     Tries to validate a new value for a specified property. If the validation is successful,
+    ///     <see cref="ObservableObject.SetProperty{T}(T,T,Action{T},string?)" /> is called, otherwise no state change is
+    ///     performed.
     /// </summary>
     /// <typeparam name="T">The type of the property that changed.</typeparam>
     /// <param name="oldValue">The current property value.</param>
@@ -386,9 +442,13 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     /// <param name="errors">The resulting validation errors, if any.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
     /// <returns>Whether the validation was successful and the property value changed as well.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="callback"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="callback" /> or
+    ///     <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool TrySetProperty<T>(T oldValue, T newValue, Action<T> callback, out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
+    protected bool TrySetProperty<T>(T oldValue, T newValue, Action<T> callback,
+        out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
     {
         ArgumentNullException.ThrowIfNull(callback);
         ArgumentNullException.ThrowIfNull(propertyName);
@@ -398,20 +458,25 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Tries to validate a new value for a specified property. If the validation is successful,
-    /// <see cref="ObservableObject.SetProperty{T}(T,T,IEqualityComparer{T},Action{T},string?)"/> is called, otherwise no state change is performed.
+    ///     Tries to validate a new value for a specified property. If the validation is successful,
+    ///     <see cref="ObservableObject.SetProperty{T}(T,T,IEqualityComparer{T},Action{T},string?)" /> is called, otherwise no
+    ///     state change is performed.
     /// </summary>
     /// <typeparam name="T">The type of the property that changed.</typeparam>
     /// <param name="oldValue">The current property value.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
-    /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> instance to use to compare the input values.</param>
+    /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> instance to use to compare the input values.</param>
     /// <param name="callback">A callback to invoke to update the property value.</param>
     /// <param name="errors">The resulting validation errors, if any.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
     /// <returns>Whether the validation was successful and the property value changed as well.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="comparer"/>, <paramref name="callback"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="comparer" />, <paramref name="callback" /> or
+    ///     <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool TrySetProperty<T>(T oldValue, T newValue, IEqualityComparer<T> comparer, Action<T> callback, out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
+    protected bool TrySetProperty<T>(T oldValue, T newValue, IEqualityComparer<T> comparer, Action<T> callback,
+        out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
     {
         ArgumentNullException.ThrowIfNull(comparer);
         ArgumentNullException.ThrowIfNull(callback);
@@ -422,8 +487,9 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Tries to validate a new value for a specified property. If the validation is successful,
-    /// <see cref="ObservableObject.SetProperty{TModel,T}(T,T,TModel,Action{TModel,T},string?)"/> is called, otherwise no state change is performed.
+    ///     Tries to validate a new value for a specified property. If the validation is successful,
+    ///     <see cref="ObservableObject.SetProperty{TModel,T}(T,T,TModel,Action{TModel,T},string?)" /> is called, otherwise no
+    ///     state change is performed.
     /// </summary>
     /// <typeparam name="TModel">The type of model whose property (or field) to set.</typeparam>
     /// <typeparam name="T">The type of property (or field) to set.</typeparam>
@@ -434,9 +500,13 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     /// <param name="errors">The resulting validation errors, if any.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
     /// <returns>Whether the validation was successful and the property value changed as well.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="model"/>, <paramref name="callback"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="model" />, <paramref name="callback" /> or
+    ///     <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool TrySetProperty<TModel, T>(T oldValue, T newValue, TModel model, Action<TModel, T> callback, out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
+    protected bool TrySetProperty<TModel, T>(T oldValue, T newValue, TModel model, Action<TModel, T> callback,
+        out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
         where TModel : class
     {
         ArgumentNullException.ThrowIfNull(model);
@@ -448,22 +518,28 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Tries to validate a new value for a specified property. If the validation is successful,
-    /// <see cref="ObservableObject.SetProperty{TModel,T}(T,T,IEqualityComparer{T},TModel,Action{TModel,T},string?)"/> is called, otherwise no state change is performed.
+    ///     Tries to validate a new value for a specified property. If the validation is successful,
+    ///     <see cref="ObservableObject.SetProperty{TModel,T}(T,T,IEqualityComparer{T},TModel,Action{TModel,T},string?)" /> is
+    ///     called, otherwise no state change is performed.
     /// </summary>
     /// <typeparam name="TModel">The type of model whose property (or field) to set.</typeparam>
     /// <typeparam name="T">The type of property (or field) to set.</typeparam>
     /// <param name="oldValue">The current property value.</param>
     /// <param name="newValue">The property's value after the change occurred.</param>
-    /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> instance to use to compare the input values.</param>
+    /// <param name="comparer">The <see cref="IEqualityComparer{T}" /> instance to use to compare the input values.</param>
     /// <param name="model">The model </param>
     /// <param name="callback">The callback to invoke to set the target property value, if a change has occurred.</param>
     /// <param name="errors">The resulting validation errors, if any.</param>
     /// <param name="propertyName">(optional) The name of the property that changed.</param>
     /// <returns>Whether the validation was successful and the property value changed as well.</returns>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="comparer"/>, <paramref name="model"/>, <paramref name="callback"/> or <paramref name="propertyName"/> are <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">
+    ///     Thrown if <paramref name="comparer" />, <paramref name="model" />,
+    ///     <paramref name="callback" /> or <paramref name="propertyName" /> are <see langword="null" />.
+    /// </exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    protected bool TrySetProperty<TModel, T>(T oldValue, T newValue, IEqualityComparer<T> comparer, TModel model, Action<TModel, T> callback, out IReadOnlyCollection<ValidationResult> errors, [CallerMemberName] string propertyName = null!)
+    protected bool TrySetProperty<TModel, T>(T oldValue, T newValue, IEqualityComparer<T> comparer, TModel model,
+        Action<TModel, T> callback, out IReadOnlyCollection<ValidationResult> errors,
+        [CallerMemberName] string propertyName = null!)
         where TModel : class
     {
         ArgumentNullException.ThrowIfNull(comparer);
@@ -476,11 +552,11 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Clears the validation errors for a specified property or for the entire entity.
+    ///     Clears the validation errors for a specified property or for the entire entity.
     /// </summary>
     /// <param name="propertyName">
-    /// The name of the property to clear validation errors for.
-    /// If a <see langword="null"/> or empty name is used, all entity-level errors will be cleared.
+    ///     The name of the property to clear validation errors for.
+    ///     If a <see langword="null" /> or empty name is used, all entity-level errors will be cleared.
     /// </param>
     protected void ClearErrors(string? propertyName = null)
     {
@@ -495,7 +571,7 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
         }
     }
 
-    /// <inheritdoc cref="INotifyDataErrorInfo.GetErrors(string)"/>
+    /// <inheritdoc cref="INotifyDataErrorInfo.GetErrors(string)" />
     public IEnumerable<ValidationResult> GetErrors(string? propertyName = null)
     {
         // Get entity-level errors when the target property is null or empty
@@ -525,18 +601,15 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
         return Array.Empty<ValidationResult>();
     }
 
-    /// <inheritdoc/>
-    IEnumerable INotifyDataErrorInfo.GetErrors(string? propertyName) => GetErrors(propertyName);
-
     /// <summary>
-    /// Validates all the properties in the current instance and updates all the tracked errors.
-    /// If any changes are detected, the <see cref="ErrorsChanged"/> event will be raised.
+    ///     Validates all the properties in the current instance and updates all the tracked errors.
+    ///     If any changes are detected, the <see cref="ErrorsChanged" /> event will be raised.
     /// </summary>
     /// <remarks>
-    /// Only public instance properties (excluding custom indexers) that have at least one
-    /// <see cref="ValidationAttribute"/> applied to them will be validated. All other
-    /// members in the current instance will be ignored. None of the processed properties
-    /// will be modified - they will only be used to retrieve their values and validate them.
+    ///     Only public instance properties (excluding custom indexers) that have at least one
+    ///     <see cref="ValidationAttribute" /> applied to them will be validated. All other
+    ///     members in the current instance will be ignored. None of the processed properties
+    ///     will be modified - they will only be used to retrieve their values and validate them.
     /// </remarks>
     [RequiresUnreferencedCode(
         "This method requires the generated CommunityToolkit.Mvvm.ComponentModel.__Internals.__ObservableValidatorExtensions type not to be removed to use the fast path. " +
@@ -550,7 +623,9 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
         // is used to make this method more AOT-friendly and faster, as there is no dynamic code.
         static Action<object> GetValidationAction(Type type)
         {
-            if (type.Assembly.GetType("CommunityToolkit.Mvvm.ComponentModel.__Internals.__ObservableValidatorExtensions") is Type extensionsType &&
+            if (type.Assembly.GetType(
+                        "CommunityToolkit.Mvvm.ComponentModel.__Internals.__ObservableValidatorExtensions") is Type
+                    extensionsType &&
                 extensionsType.GetMethod("CreateAllPropertiesValidator", new[] { type }) is MethodInfo methodInfo)
             {
                 return (Action<object>)methodInfo.Invoke(null, new object?[] { null })!;
@@ -583,7 +658,8 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
             UnaryExpression inst0 = Expression.Convert(arg0, type);
 
             // Get a reference to ValidateProperty(object, string)
-            MethodInfo validateMethod = typeof(ObservableValidator).GetMethod(nameof(ValidateProperty), BindingFlags.Instance | BindingFlags.NonPublic)!;
+            MethodInfo validateMethod = typeof(ObservableValidator).GetMethod(nameof(ValidateProperty),
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
 
             // We want a single compiled LINQ expression that validates all properties in the
             // actual type of the executing viewmodel at once. We do this by creating a block
@@ -604,11 +680,12 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
             // a concept of member visibility, that's purely a C# build-time feature.
             BlockExpression body = Expression.Block(
                 from property in validatableProperties
-                select Expression.Call(inst0, validateMethod, new Expression[]
-                {
-                    Expression.Convert(Expression.Call(inst0, property.GetMethod), typeof(object)),
-                    Expression.Constant(property.Name)
-                }));
+                select Expression.Call(inst0, validateMethod,
+                    new Expression[]
+                    {
+                        Expression.Convert(Expression.Call(inst0, property.GetMethod), typeof(object)),
+                        Expression.Constant(property.Name)
+                    }));
 
             return Expression.Lambda<Action<object>>(body, arg0).Compile();
         }
@@ -619,12 +696,12 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Validates a property with a specified name and a given input value.
-    /// If any changes are detected, the <see cref="ErrorsChanged"/> event will be raised.
+    ///     Validates a property with a specified name and a given input value.
+    ///     If any changes are detected, the <see cref="ErrorsChanged" /> event will be raised.
     /// </summary>
     /// <param name="value">The value to test for the specified property.</param>
     /// <param name="propertyName">The name of the property to validate.</param>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="propertyName"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="propertyName" /> is <see langword="null" />.</exception>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
     protected internal void ValidateProperty(object? value, [CallerMemberName] string propertyName = null!)
     {
@@ -695,15 +772,16 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Tries to validate a property with a specified name and a given input value, and returns
-    /// the computed errors, if any. If the property is valid, it is assumed that its value is
-    /// about to be set in the current object. Otherwise, no observable local state is modified.
+    ///     Tries to validate a property with a specified name and a given input value, and returns
+    ///     the computed errors, if any. If the property is valid, it is assumed that its value is
+    ///     about to be set in the current object. Otherwise, no observable local state is modified.
     /// </summary>
     /// <param name="value">The value to test for the specified property.</param>
     /// <param name="propertyName">The name of the property to validate.</param>
     /// <param name="errors">The resulting validation errors, if any.</param>
     [RequiresUnreferencedCode("The type of the current instance cannot be statically discovered.")]
-    private bool TryValidateProperty(object? value, string propertyName, out IReadOnlyCollection<ValidationResult> errors)
+    private bool TryValidateProperty(object? value, string propertyName,
+        out IReadOnlyCollection<ValidationResult> errors)
     {
         // Add the cached errors list for later use.
         if (!this.errors.TryGetValue(propertyName!, out List<ValidationResult>? propertyErrors))
@@ -745,7 +823,7 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Clears all the current errors for the entire entity.
+    ///     Clears all the current errors for the entire entity.
     /// </summary>
     private void ClearAllErrors()
     {
@@ -774,7 +852,7 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Clears all the current errors for a target property.
+    ///     Clears all the current errors for a target property.
     /// </summary>
     /// <param name="propertyName">The name of the property to clear errors for.</param>
     private void ClearErrorsForProperty(string propertyName)
@@ -798,7 +876,7 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
     }
 
     /// <summary>
-    /// Gets the display name for a given property. It could be a custom name or just the property name.
+    ///     Gets the display name for a given property. It could be a custom name or just the property name.
     /// </summary>
     /// <param name="propertyName">The target property name being validated.</param>
     /// <returns>The display name for the property.</returns>
@@ -823,7 +901,8 @@ public abstract class ObservableValidator : ObservableObject, INotifyDataErrorIn
 
         // This method replicates the logic of DisplayName and GetDisplayName from the
         // ValidationContext class. See the original source in the BCL for more details.
-        _ = DisplayNamesMap.GetValue(GetType(), static t => GetDisplayNames(t)).TryGetValue(propertyName, out string? displayName);
+        _ = DisplayNamesMap.GetValue(GetType(), static t => GetDisplayNames(t))
+            .TryGetValue(propertyName, out string? displayName);
 
         return displayName ?? propertyName;
     }

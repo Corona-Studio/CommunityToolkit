@@ -8,18 +8,21 @@ using CommunityToolkit.Mvvm.Input.Internals;
 namespace CommunityToolkit.Mvvm.Input;
 
 /// <summary>
-/// Extensions for the <see cref="IAsyncRelayCommand"/> type.
+///     Extensions for the <see cref="IAsyncRelayCommand" /> type.
 /// </summary>
 public static class IAsyncRelayCommandExtensions
 {
     /// <summary>
-    /// Creates an <see cref="ICommand"/> instance that can be used to cancel execution on the input command.
-    /// The returned command will also notify when it can be executed based on the state of the wrapped command.
+    ///     Creates an <see cref="ICommand" /> instance that can be used to cancel execution on the input command.
+    ///     The returned command will also notify when it can be executed based on the state of the wrapped command.
     /// </summary>
-    /// <param name="command">The input <see cref="IAsyncRelayCommand"/> instance to create a cancellation command for.</param>
-    /// <returns>An <see cref="ICommand"/> instance that can be used to monitor and signal cancellation for <paramref name="command"/>.</returns>
+    /// <param name="command">The input <see cref="IAsyncRelayCommand" /> instance to create a cancellation command for.</param>
+    /// <returns>
+    ///     An <see cref="ICommand" /> instance that can be used to monitor and signal cancellation for
+    ///     <paramref name="command" />.
+    /// </returns>
     /// <remarks>The returned instance is not guaranteed to be unique across multiple invocations with the same arguments.</remarks>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="command"/> is <see langword="null"/>.</exception>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="command" /> is <see langword="null" />.</exception>
     public static ICommand CreateCancelCommand(this IAsyncRelayCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);

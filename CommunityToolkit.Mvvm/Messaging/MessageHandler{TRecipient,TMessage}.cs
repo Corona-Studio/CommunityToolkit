@@ -5,10 +5,10 @@
 namespace CommunityToolkit.Mvvm.Messaging;
 
 /// <summary>
-/// A <see langword="delegate"/> used to represent actions to invoke when a message is received.
-/// The recipient is given as an input argument to allow message registrations to avoid creating
-/// closures: if an instance method on a recipient needs to be invoked it is possible to just
-/// cast the recipient to the right type and then access the local method from that instance.
+///     A <see langword="delegate" /> used to represent actions to invoke when a message is received.
+///     The recipient is given as an input argument to allow message registrations to avoid creating
+///     closures: if an instance method on a recipient needs to be invoked it is possible to just
+///     cast the recipient to the right type and then access the local method from that instance.
 /// </summary>
 /// <typeparam name="TRecipient">The type of recipient for the message.</typeparam>
 /// <typeparam name="TMessage">The type of message to receive.</typeparam>

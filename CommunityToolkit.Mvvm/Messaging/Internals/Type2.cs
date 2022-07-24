@@ -8,29 +8,29 @@ using System.Runtime.CompilerServices;
 namespace CommunityToolkit.Mvvm.Messaging.Internals;
 
 /// <summary>
-/// A simple type representing an immutable pair of types.
+///     A simple type representing an immutable pair of types.
 /// </summary>
 /// <remarks>
-/// This type replaces a simple <see cref="ValueTuple{T1,T2}"/> as it's faster in its
-/// <see cref="GetHashCode"/> and <see cref="IEquatable{T}.Equals(T)"/> methods, and because
-/// unlike a value tuple it exposes its fields as immutable. Additionally, the
-/// <see cref="TMessage"/> and <see cref="TToken"/> fields provide additional clarity reading
-/// the code compared to <see cref="ValueTuple{T1,T2}.Item1"/> and <see cref="ValueTuple{T1,T2}.Item2"/>.
+///     This type replaces a simple <see cref="(T1, T2)" /> as it's faster in its
+///     <see cref="GetHashCode" /> and <see cref="IEquatable{T}.Equals(T)" /> methods, and because
+///     unlike a value tuple it exposes its fields as immutable. Additionally, the
+///     <see cref="TMessage" /> and <see cref="TToken" /> fields provide additional clarity reading
+///     the code compared to <see cref="ValueTuple{T1,T2}.Item1" /> and <see cref="ValueTuple{T1,T2}.Item2" />.
 /// </remarks>
 internal readonly struct Type2 : IEquatable<Type2>
 {
     /// <summary>
-    /// The type of registered message.
+    ///     The type of registered message.
     /// </summary>
     public readonly Type TMessage;
 
     /// <summary>
-    /// The type of registration token.
+    ///     The type of registration token.
     /// </summary>
     public readonly Type TToken;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Type2"/> struct.
+    ///     Initializes a new instance of the <see cref="Type2" /> struct.
     /// </summary>
     /// <param name="tMessage">The type of registered message.</param>
     /// <param name="tToken">The type of registration token.</param>
@@ -41,7 +41,7 @@ internal readonly struct Type2 : IEquatable<Type2>
         this.TToken = tToken;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(Type2 other)
     {
@@ -55,13 +55,13 @@ internal readonly struct Type2 : IEquatable<Type2>
             this.TToken == other.TToken;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override bool Equals(object? obj)
     {
         return obj is Type2 other && Equals(other);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetHashCode()
     {

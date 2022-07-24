@@ -10,7 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace CommunityToolkit.Mvvm.Messaging.Messages;
 
 /// <summary>
-/// A <see langword="class"/> for request messages, which can either be used directly or through derived classes.
+///     A <see langword="class" /> for request messages, which can either be used directly or through derived classes.
 /// </summary>
 /// <typeparam name="T">The type of request to make.</typeparam>
 public class RequestMessage<T>
@@ -18,9 +18,9 @@ public class RequestMessage<T>
     private T response;
 
     /// <summary>
-    /// Gets the message response.
+    ///     Gets the message response.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when <see cref="HasReceivedResponse"/> is <see langword="false"/>.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when <see cref="HasReceivedResponse" /> is <see langword="false" />.</exception>
     public T Response
     {
         get
@@ -35,15 +35,15 @@ public class RequestMessage<T>
     }
 
     /// <summary>
-    /// Gets a value indicating whether a response has already been assigned to this instance.
+    ///     Gets a value indicating whether a response has already been assigned to this instance.
     /// </summary>
     public bool HasReceivedResponse { get; private set; }
 
     /// <summary>
-    /// Replies to the current request message.
+    ///     Replies to the current request message.
     /// </summary>
     /// <param name="response">The response to use to reply to the request message.</param>
-    /// <exception cref="InvalidOperationException">Thrown if <see cref="Response"/> has already been set.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if <see cref="Response" /> has already been set.</exception>
     public void Reply(T response)
     {
         if (HasReceivedResponse)
@@ -57,11 +57,11 @@ public class RequestMessage<T>
     }
 
     /// <summary>
-    /// Implicitly gets the response from a given <see cref="RequestMessage{T}"/> instance.
+    ///     Implicitly gets the response from a given <see cref="RequestMessage{T}" /> instance.
     /// </summary>
-    /// <param name="message">The input <see cref="RequestMessage{T}"/> instance.</param>
-    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="message"/> is <see langword="null"/>.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when <see cref="HasReceivedResponse"/> is <see langword="false"/>.</exception>
+    /// <param name="message">The input <see cref="RequestMessage{T}" /> instance.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="message" /> is <see langword="null" />.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when <see cref="HasReceivedResponse" /> is <see langword="false" />.</exception>
     public static implicit operator T(RequestMessage<T> message)
     {
         ArgumentNullException.ThrowIfNull(message);
@@ -70,7 +70,7 @@ public class RequestMessage<T>
     }
 
     /// <summary>
-    /// Throws an <see cref="InvalidOperationException"/> when a response is not available.
+    ///     Throws an <see cref="InvalidOperationException" /> when a response is not available.
     /// </summary>
     [DoesNotReturn]
     private static void ThrowInvalidOperationExceptionForNoResponseReceived()
@@ -79,7 +79,7 @@ public class RequestMessage<T>
     }
 
     /// <summary>
-    /// Throws an <see cref="InvalidOperationException"/> when <see cref="Reply"/> is called twice.
+    ///     Throws an <see cref="InvalidOperationException" /> when <see cref="Reply" /> is called twice.
     /// </summary>
     [DoesNotReturn]
     private static void ThrowInvalidOperationExceptionForDuplicateReply()

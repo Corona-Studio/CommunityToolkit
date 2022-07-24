@@ -8,24 +8,24 @@ using System.Runtime.CompilerServices;
 namespace CommunityToolkit.Mvvm.Messaging.Internals;
 
 /// <summary>
-/// An empty type representing a generic token with no specific value.
+///     An empty type representing a generic token with no specific value.
 /// </summary>
 internal readonly struct Unit : IEquatable<Unit>
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(Unit other)
     {
         return true;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override bool Equals(object? obj)
     {
         return obj is Unit;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetHashCode()
     {

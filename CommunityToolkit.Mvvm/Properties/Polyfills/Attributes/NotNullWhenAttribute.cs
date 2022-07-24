@@ -7,20 +7,27 @@
 namespace System.Diagnostics.CodeAnalysis;
 
 /// <summary>
-/// Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.
+///     Specifies that when a method returns <see cref="ReturnValue" />, the parameter will not be null even if the
+///     corresponding type allows it.
 /// </summary>
 /// <remarks>Internal copy from the BCL attribute.</remarks>
-[AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
+[AttributeUsage(AttributeTargets.Parameter)]
 internal sealed class NotNullWhenAttribute : Attribute
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="NotNullWhenAttribute"/> class.
+    ///     Initializes a new instance of the <see cref="NotNullWhenAttribute" /> class.
     /// </summary>
-    /// <param name="returnValue">The return value condition. If the method returns this value, the associated parameter will not be null.</param>
-    public NotNullWhenAttribute(bool returnValue) => ReturnValue = returnValue;
+    /// <param name="returnValue">
+    ///     The return value condition. If the method returns this value, the associated parameter will
+    ///     not be null.
+    /// </param>
+    public NotNullWhenAttribute(bool returnValue)
+    {
+        ReturnValue = returnValue;
+    }
 
     /// <summary>
-    /// Gets a value indicating whether the annotated variable is not <see langword="null"/>.
+    ///     Gets a value indicating whether the annotated variable is not <see langword="null" />.
     /// </summary>
     public bool ReturnValue { get; }
 }

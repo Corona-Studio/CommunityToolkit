@@ -5,8 +5,8 @@
 namespace System.Collections.Generic;
 
 /// <summary>
-/// An interface providing key type contravariant and value type covariant access
-/// to a <see cref="Dictionary2{TKey,TValue}"/> instance.
+///     An interface providing key type contravariant and value type covariant access
+///     to a <see cref="Dictionary2{TKey,TValue}" /> instance.
 /// </summary>
 /// <typeparam name="TKey">The contravariant type of keys in the dictionary.</typeparam>
 /// <typeparam name="TValue">The covariant type of values in the dictionary.</typeparam>
@@ -15,7 +15,7 @@ internal interface IDictionary2<in TKey, out TValue> : IDictionary2<TKey>
     where TValue : class?
 {
     /// <summary>
-    /// Gets the value with the specified key.
+    ///     Gets the value with the specified key.
     /// </summary>
     /// <param name="key">The key to look for.</param>
     /// <returns>The returned value.</returns>

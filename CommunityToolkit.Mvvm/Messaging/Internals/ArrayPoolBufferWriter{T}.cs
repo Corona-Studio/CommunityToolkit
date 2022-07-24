@@ -9,41 +9,41 @@ using System.Runtime.CompilerServices;
 namespace CommunityToolkit.Mvvm.Messaging.Internals;
 
 /// <summary>
-/// A simple buffer writer implementation using pooled arrays.
+///     A simple buffer writer implementation using pooled arrays.
 /// </summary>
 /// <typeparam name="T">The type of items to store in the list.</typeparam>
 /// <remarks>
-/// This type is a <see langword="ref"/> <see langword="struct"/> to avoid the object allocation and to
-/// enable the pattern-based <see cref="IDisposable"/> support. We aren't worried with consumers not
-/// using this type correctly since it's private and only accessible within the parent type.
+///     This type is a <see langword="ref" /> <see langword="struct" /> to avoid the object allocation and to
+///     enable the pattern-based <see cref="IDisposable" /> support. We aren't worried with consumers not
+///     using this type correctly since it's private and only accessible within the parent type.
 /// </remarks>
 internal ref struct ArrayPoolBufferWriter<T>
 {
     /// <summary>
-    /// The default buffer size to use to expand empty arrays.
+    ///     The default buffer size to use to expand empty arrays.
     /// </summary>
     private const int DefaultInitialBufferSize = 128;
 
     /// <summary>
-    /// The underlying <typeparamref name="T"/> array.
+    ///     The underlying <typeparamref name="T" /> array.
     /// </summary>
     private T[] array;
 
     /// <summary>
-    /// The span mapping to <see cref="array"/>.
+    ///     The span mapping to <see cref="array" />.
     /// </summary>
     /// <remarks>All writes are done through this to avoid covariance checks.</remarks>
     private Span<T> span;
 
     /// <summary>
-    /// The starting offset within <see cref="array"/>.
+    ///     The starting offset within <see cref="array" />.
     /// </summary>
     private int index;
 
     /// <summary>
-    /// Creates a new instance of the <see cref="ArrayPoolBufferWriter{T}"/> struct.
+    ///     Creates a new instance of the <see cref="ArrayPoolBufferWriter{T}" /> struct.
     /// </summary>
-    /// <returns>A new <see cref="ArrayPoolBufferWriter{T}"/> instance.</returns>
+    /// <returns>A new <see cref="ArrayPoolBufferWriter{T}" /> instance.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ArrayPoolBufferWriter<T> Create()
     {
@@ -56,16 +56,19 @@ internal ref struct ArrayPoolBufferWriter<T>
     }
 
     /// <summary>
-    /// Gets a <see cref="ReadOnlySpan{T}"/> with the current items.
+    ///     Gets a <see cref="ReadOnlySpan{T}" /> with the current items.
     /// </summary>
     public ReadOnlySpan<T> Span
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => this.span.Slice(0, this.index);
+        get
+        {
+            return this.span.Slice(0, this.index);
+        }
     }
 
     /// <summary>
-    /// Adds a new item to the current collection.
+    ///     Adds a new item to the current collection.
     /// </summary>
     /// <param name="item">The item to add.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -87,7 +90,7 @@ internal ref struct ArrayPoolBufferWriter<T>
     }
 
     /// <summary>
-    /// Resets the underlying array and the stored items.
+    ///     Resets the underlying array and the stored items.
     /// </summary>
     public void Reset()
     {
@@ -97,7 +100,7 @@ internal ref struct ArrayPoolBufferWriter<T>
     }
 
     /// <summary>
-    /// Resizes <see cref="array"/> when there is no space left for new items, then adds one
+    ///     Resizes <see cref="array" /> when there is no space left for new items, then adds one
     /// </summary>
     /// <param name="item">The item to add.</param>
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -115,7 +118,7 @@ internal ref struct ArrayPoolBufferWriter<T>
         this.span[this.index++] = item;
     }
 
-    /// <inheritdoc cref="IDisposable.Dispose"/>
+    /// <inheritdoc cref="IDisposable.Dispose" />
     public void Dispose()
     {
         Array.Clear(this.array, 0, this.index);
