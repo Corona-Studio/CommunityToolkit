@@ -211,3 +211,4 @@ FakesAssemblies/
 
 # JetBrains Rider
 *.sln.iml
+.DS_Store
