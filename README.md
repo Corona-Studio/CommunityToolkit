@@ -4,28 +4,29 @@
 
 | Target | Branch | Status | Recommended package version |
 | ------ | ------ | ------ | ------ |
-| Production | rel/8.0.0 | [![Build Status](https://dev.azure.com/dotnet/CommunityToolkit/_apis/build/status/Toolkit-CI?branchName=rel/8.0.0)](https://dev.azure.com/dotnet/CommunityToolkit/_build/latest?definitionId=10&branchName=rel/8.0.0) | [![NuGet](https://img.shields.io/nuget/v/Microsoft.Toolkit.svg)](https://www.nuget.org/profiles/Microsoft.Toolkit) |
-| Previews | main | [![Build Status](https://dev.azure.com/dotnet/CommunityToolkit/_apis/build/status/Toolkit-CI?branchName=main)](https://dev.azure.com/dotnet/CommunityToolkit/_build/latest?definitionId=10) | [![DevOps](https://vsrm.dev.azure.com/dotnet/_apis/public/Release/badge/696bc9fd-f160-4e97-a1bd-7cbbb3b58f66/1/1)](https://dev.azure.com/dotnet/CommunityToolkit/_packaging?_a=feed&feed=CommunityToolkit-MainLatest) |
+| Production | rel/8.0.0 | [![Build Status](https://dev.azure.com/dotnet/CommunityToolkit/_apis/build/status/CommunityToolkit.dotnet?branchName=rel/8.0.0)](https://dev.azure.com/dotnet/CommunityToolkit/_build/latest?definitionId=180&branchName=rel/8.0.0) | [![NuGet](https://img.shields.io/nuget/v/CommunityToolkit.Common.svg)](https://www.nuget.org/profiles/Microsoft.Toolkit) |
+| Previews | main | [![Build Status](https://dev.azure.com/dotnet/CommunityToolkit/_apis/build/status/CommunityToolkit.dotnet?branchName=main)](https://dev.azure.com/dotnet/CommunityToolkit/_build/latest?definitionId=180) | [![DevOps](https://vsrm.dev.azure.com/dotnet/_apis/public/Release/badge/696bc9fd-f160-4e97-a1bd-7cbbb3b58f66/9/26)](https://dev.azure.com/dotnet/CommunityToolkit/_packaging?_a=feed&feed=CommunityToolkit-MainLatest) |
 
 ## 👀 What does this repo contain?
 
 This repository contains several .NET libraries (originally developed as part of the [Windows Community Toolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit)) that can be used both by application developers (regardless on the specific UI framework in use, they work everywhere!) and library authors. These libraries are also being used internally at Microsoft to power many of our first party apps (such as the new Microsoft Store) and constantly improved by listening to feedbacks from other teams, external partners and other developers from the community. Here's a quick breakdown of the various components you'll find in this repository:
 
-- [`CommunityToolkit.Mvvm` (aka MVVM Toolkit)](https://aka.ms/mvvmtoolkit/docs): a fast, modular, platform-agnostic MVVM library, which is the official successor of `MvvmLight`. It's used extensively in the Microsoft Store and other first party apps. [The sample app repository is here](https://aka.ms/mvvmtoolkit/samples).
-- `CommunityToolkit.Mvvm.SourceGenerators`: the source generators to augment the MVVM Toolkit.
-- [`CommunityToolkit.Diagnostics`](https://docs.microsoft.com/windows/communitytoolkit/diagnostics/introduction): a set of helper APIs (specifically, [`Guard`](https://docs.microsoft.com/windows/communitytoolkit/developer-tools/guard) and [`ThrowHelper`](https://docs.microsoft.com/windows/communitytoolkit/developer-tools/throwhelper)) that can be used for cleaner, more efficient and less error-prone argument validation and error checking.
-- [`CommunityToolkit.HighPerformance`](https://docs.microsoft.com/windows/communitytoolkit/high-performance/introduction) a collection of helpers for working in high-performance scenarios. It includes APIs such as [pooled buffer helpers](https://docs.microsoft.com/windows/communitytoolkit/high-performance/memoryowner), a fast [string pool](https://docs.microsoft.com/windows/communitytoolkit/high-performance/stringpool) type, a 2D variant of `Memory<T>` and `Span<T>` ([`Memory2D<T>`](https://docs.microsoft.com/windows/communitytoolkit/high-performance/memory2d) and [`Span2D<T>`](https://docs.microsoft.com/windows/communitytoolkit/high-performance/span2d)) also supporting discontiguous regions, helpers for bit shift operations (such as [`BitHelper`](https://docs.microsoft.com/windows/communitytoolkit/high-performance/span2d), also used in [Paint.NET](https://www.getpaint.net/)), and more.
-- [`CommunityToolkit.Common`](https://docs.microsoft.com/dotnet/api/?term=communitytoolkit.common): a set of helper APIs shared with other CommunityToolkit libraries.
+Package | Latest stable | Latest Preview | Description
+---------|---------------|---------------|------------
+[`CommunityToolkit.Common`](https://learn.microsoft.com/dotnet/api/?term=communitytoolkit.common) | [![CommunityToolkit.Common](https://img.shields.io/nuget/v/CommunityToolkit.Common)](https://nuget.org/packages/CommunityToolkit.Common/) | [![CommunityToolkit.Common](https://img.shields.io/nuget/vpre/CommunityToolkit.Common)](https://nuget.org/packages/CommunityToolkit.Common/absoluteLatest) | A set of helper APIs shared with other [`CommunityToolkit`](https://learn.microsoft.com/windows/communitytoolkit) libraries.
+[`CommunityToolkit.Diagnostics`](https://learn.microsoft.com/windows/communitytoolkit/diagnostics/introduction) | [![CommunityToolkit.Diagnostics](https://img.shields.io/nuget/v/CommunityToolkit.Diagnostics)](https://nuget.org/packages/CommunityToolkit.Diagnostics/) | [![CommunityToolkit.Diagnostics](https://img.shields.io/nuget/vpre/CommunityToolkit.Diagnostics)](https://nuget.org/packages/CommunityToolkit.Diagnostics/absoluteLatest) | A set of helper APIs (specifically, [`Guard`](https://learn.microsoft.com/windows/communitytoolkit/developer-tools/guard) and [`ThrowHelper`](https://learn.microsoft.com/windows/communitytoolkit/developer-tools/throwhelper)) that can be used for cleaner, more efficient and less error-prone argument validation and error checking.
+[`CommunityToolkit.HighPerformance`](https://learn.microsoft.com/windows/communitytoolkit/high-performance/introduction) | [![CommunityToolkit.HighPerformance](https://img.shields.io/nuget/v/CommunityToolkit.HighPerformance)](https://nuget.org/packages/CommunityToolkit.HighPerformance/) | [![CommunityToolkit.HighPerformance](https://img.shields.io/nuget/vpre/CommunityToolkit.HighPerformance)](https://nuget.org/packages/CommunityToolkit.HighPerformance/absoluteLatest) | A collection of helpers for working in high-performance scenarios. It includes APIs such as [pooled buffer helpers](https://learn.microsoft.com/windows/communitytoolkit/high-performance/memoryowner), a fast [string pool](https://learn.microsoft.com/windows/communitytoolkit/high-performance/stringpool) type, a 2D variant of `Memory<T>` and `Span<T>` ([`Memory2D<T>`](https://learn.microsoft.com/windows/communitytoolkit/high-performance/memory2d) and [`Span2D<T>`](https://learn.microsoft.com/windows/communitytoolkit/high-performance/span2d)) also supporting discontiguous regions, helpers for bit shift operations (such as [`BitHelper`](https://learn.microsoft.com/windows/communitytoolkit/high-performance/span2d), also used in [Paint.NET](https://getpaint.net)), and more.
+[`CommunityToolkit.Mvvm` (aka MVVM Toolkit)](https://aka.ms/mvvmtoolkit/docs) | [![CommunityToolkit.Mvvm](https://img.shields.io/nuget/v/CommunityToolkit.Mvvm)](https://nuget.org/packages/CommunityToolkit.Mvvm/) | [![CommunityToolkit.Mvvm](https://img.shields.io/nuget/vpre/CommunityToolkit.Mvvm)](https://nuget.org/packages/CommunityToolkit.Mvvm/absoluteLatest) | A fast, modular, platform-agnostic MVVM library, which is the official successor of `MvvmLight`. It's used extensively in the Microsoft Store and other first party apps. [The sample app repository is here](https://aka.ms/mvvmtoolkit/samples).
 
 ## 🙌 Getting Started
 
-Please read the [Getting Started with the .NET Community Toolkit](https://docs.microsoft.com/windows/communitytoolkit/getting-started) page for more detailed information.
+Please read the [Getting Started with the .NET Community Toolkit](https://learn.microsoft.com/windows/communitytoolkit/getting-started) page for more detailed information.
 
 ## 📃 Documentation
 
-All documentation for the toolkit is hosted on [Microsoft Docs](https://docs.microsoft.com/dotnet/communitytoolkit/).
+All documentation for the toolkit is hosted on [Microsoft Docs](https://learn.microsoft.com/dotnet/communitytoolkit/).
 
-All API documentation can be found at the [.NET API Browser](https://docs.microsoft.com/dotnet/api/?view=win-comm-toolkit-dotnet-stable).
+All API documentation can be found at the [.NET API Browser](https://learn.microsoft.com/dotnet/api/?view=win-comm-toolkit-dotnet-stable).
 
 ## 🚀 Contribution
 
@@ -35,7 +36,7 @@ Check out our [.NET Community Toolkit Wiki](https://aka.ms/wct/wiki) page to lea
 
 ## 📦 NuGet Packages
 
-NuGet is a standard package manager for .NET applications which is built into Visual Studio. When you open solution in Visual Studio, choose the *Tools* menu > *NuGet Package Manager* > *Manage NuGet packages for solution…* Enter one of the package names mentioned in [.NET Community Toolkit NuGet Packages](https://docs.microsoft.com/windows/communitytoolkit/nuget-packages) table to search for it online.
+NuGet is a standard package manager for .NET applications which is built into Visual Studio. When you open solution in Visual Studio, choose the *Tools* menu > *NuGet Package Manager* > *Manage NuGet packages for solution…* Enter one of the package names mentioned in [.NET Community Toolkit NuGet Packages](https://learn.microsoft.com/windows/communitytoolkit/nuget-packages) table to search for it online.
 
 ## 🌍 Roadmap
 

@@ -12,7 +12,6 @@ using CommunityToolkit.Mvvm.SourceGenerators.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using static CommunityToolkit.Mvvm.SourceGenerators.Diagnostics.DiagnosticDescriptors;
 
 namespace CommunityToolkit.Mvvm.SourceGenerators;
 
@@ -25,46 +24,30 @@ public sealed partial class ObservablePropertyGenerator : IIncrementalGenerator
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Get all field declarations with at least one attribute
-        IncrementalValuesProvider<IFieldSymbol> fieldSymbols =
-            context.SyntaxProvider
-            .CreateSyntaxProvider(
-                static (node, _) => node is FieldDeclarationSyntax { Parent: ClassDeclarationSyntax or RecordDeclarationSyntax, AttributeLists.Count: > 0 },
-                static (context, _) => ((FieldDeclarationSyntax)context.Node).Declaration.Variables.Select(v => (IFieldSymbol)context.SemanticModel.GetDeclaredSymbol(v)!))
-            .SelectMany(static (item, _) => item);
-
-        // Filter the fields using [ObservableProperty]
-        IncrementalValuesProvider<IFieldSymbol> fieldSymbolsWithAttribute =
-            fieldSymbols
-            .Where(static item => item.HasAttributeWithFullyQualifiedName("global::CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute"));
-
-        // Get diagnostics for fields using [NotifyPropertyChangedFor], [NotifyCanExecuteChangedFor], [NotifyPropertyChangedRecipients] and [NotifyDataErrorInfo], but not [ObservableProperty]
-        IncrementalValuesProvider<Diagnostic> fieldSymbolsWithOrphanedDependentAttributeWithErrors =
-            fieldSymbols
-            .Where(static item =>
-                (item.HasAttributeWithFullyQualifiedName("global::CommunityToolkit.Mvvm.ComponentModel.NotifyPropertyChangedForAttribute") ||
-                 item.HasAttributeWithFullyQualifiedName("global::CommunityToolkit.Mvvm.ComponentModel.NotifyCanExecuteChangedForAttribute") ||
-                 item.HasAttributeWithFullyQualifiedName("global::CommunityToolkit.Mvvm.ComponentModel.NotifyPropertyChangedRecipientsAttribute") ||
-                 item.HasAttributeWithFullyQualifiedName("global::CommunityToolkit.Mvvm.ComponentModel.NotifyDataErrorInfoAttribute")) &&
-                 !item.HasAttributeWithFullyQualifiedName("global::CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute"))
-            .Select(static (item, _) => Execute.GetDiagnosticForFieldWithOrphanedDependentAttributes(item));
-
-        // Output the diagnostics
-        context.ReportDiagnostics(fieldSymbolsWithOrphanedDependentAttributeWithErrors);
-
-        // Filter by language version
-        context.FilterWithLanguageVersion(ref fieldSymbolsWithAttribute, LanguageVersion.CSharp8, UnsupportedCSharpLanguageVersionError);
-
         // Gather info for all annotated fields
         IncrementalValuesProvider<(HierarchyInfo Hierarchy, Result<PropertyInfo?> Info)> propertyInfoWithErrors =
-            fieldSymbolsWithAttribute
-            .Select(static (item, _) =>
-            {
-                HierarchyInfo hierarchy = HierarchyInfo.From(item.ContainingType);
-                PropertyInfo? propertyInfo = Execute.TryGetInfo(item, out ImmutableArray<Diagnostic> diagnostics);
+            context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+                static (node, _) => node is VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax { Parent: ClassDeclarationSyntax or RecordDeclarationSyntax, AttributeLists.Count: > 0 } } },
+                static (context, token) =>
+                {
+                    if (!context.SemanticModel.Compilation.HasLanguageVersionAtLeastEqualTo(LanguageVersion.CSharp8))
+                    {
+                        return default;
+                    }
 
-                return (hierarchy, new Result<PropertyInfo?>(propertyInfo, diagnostics));
-            });
+                    FieldDeclarationSyntax fieldDeclaration = (FieldDeclarationSyntax)context.TargetNode.Parent!.Parent!;
+                    IFieldSymbol fieldSymbol = (IFieldSymbol)context.TargetSymbol;
+
+                    // Get the hierarchy info for the target symbol, and try to gather the property info
+                    HierarchyInfo hierarchy = HierarchyInfo.From(fieldSymbol.ContainingType);
+
+                    _ = Execute.TryGetInfo(fieldDeclaration, fieldSymbol, context.SemanticModel, token, out PropertyInfo? propertyInfo, out ImmutableArray<Diagnostic> diagnostics);
+
+                    return (Hierarchy: hierarchy, new Result<PropertyInfo?>(propertyInfo, diagnostics));
+                })
+            .Where(static item => item.Hierarchy is not null);
 
         // Output the diagnostics
         context.ReportDiagnostics(propertyInfoWithErrors.Select(static (item, _) => item.Info.Errors));

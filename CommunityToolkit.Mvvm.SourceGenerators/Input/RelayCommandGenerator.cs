@@ -11,7 +11,6 @@ using CommunityToolkit.Mvvm.SourceGenerators.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using static CommunityToolkit.Mvvm.SourceGenerators.Diagnostics.DiagnosticDescriptors;
 
 namespace CommunityToolkit.Mvvm.SourceGenerators;
 
@@ -24,34 +23,28 @@ public sealed partial class RelayCommandGenerator : IIncrementalGenerator
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Get all method declarations with at least one attribute
-        IncrementalValuesProvider<IMethodSymbol> methodSymbols =
-            context.SyntaxProvider
-            .CreateSyntaxProvider(
-                static (node, _) => node is MethodDeclarationSyntax { Parent: ClassDeclarationSyntax, AttributeLists.Count: > 0 },
-                static (context, _) => (IMethodSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node)!);
-
-        // Filter the methods using [RelayCommand]
-        IncrementalValuesProvider<(IMethodSymbol Symbol, AttributeData Attribute)> methodSymbolsWithAttributeData =
-            methodSymbols
-            .Select(static (item, _) => (
-                item,
-                Attribute: item.GetAttributes().FirstOrDefault(a => a.AttributeClass?.HasFullyQualifiedName("global::CommunityToolkit.Mvvm.Input.RelayCommandAttribute") == true)))
-            .Where(static item => item.Attribute is not null)!;
-
-        // Filter by language version
-        context.FilterWithLanguageVersion(ref methodSymbolsWithAttributeData, LanguageVersion.CSharp8, UnsupportedCSharpLanguageVersionError);
-
-        // Gather info for all annotated command methods
+        // Gather info for all annotated command methods (starting from method declarations with at least one attribute)
         IncrementalValuesProvider<(HierarchyInfo Hierarchy, Result<CommandInfo?> Info)> commandInfoWithErrors =
-            methodSymbolsWithAttributeData
-            .Select(static (item, _) =>
-            {
-                HierarchyInfo hierarchy = HierarchyInfo.From(item.Symbol.ContainingType);
-                CommandInfo? commandInfo = Execute.GetInfo(item.Symbol, item.Attribute, out ImmutableArray<Diagnostic> diagnostics);
+            context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+                static (node, _) => node is MethodDeclarationSyntax { Parent: ClassDeclarationSyntax, AttributeLists.Count: > 0 },
+                static (context, token) =>
+                {
+                    if (!context.SemanticModel.Compilation.HasLanguageVersionAtLeastEqualTo(LanguageVersion.CSharp8))
+                    {
+                        return default;
+                    }
 
-                return (hierarchy, new Result<CommandInfo?>(commandInfo, diagnostics));
-            });
+                    IMethodSymbol methodSymbol = (IMethodSymbol)context.TargetSymbol;
+
+                    // Produce the incremental models
+                    HierarchyInfo hierarchy = HierarchyInfo.From(methodSymbol.ContainingType);
+                    CommandInfo? commandInfo = Execute.GetInfo(methodSymbol, context.Attributes[0], out ImmutableArray<Diagnostic> diagnostics);
+
+                    return (Hierarchy: hierarchy, new Result<CommandInfo?>(commandInfo, diagnostics));
+                })
+            .Where(static item => item.Hierarchy is not null);
 
         // Output the diagnostics
         context.ReportDiagnostics(commandInfoWithErrors.Select(static (item, _) => item.Info.Errors));
@@ -61,7 +54,7 @@ public sealed partial class RelayCommandGenerator : IIncrementalGenerator
             commandInfoWithErrors
             .Where(static item => item.Info.Value is not null)
             .Select(static (item, _) => (item.Hierarchy, item.Info.Value!))
-            .WithComparers(HierarchyInfo.Comparer.Default, CommandInfo.Comparer.Default);
+            .WithComparers(HierarchyInfo.Comparer.Default, CommandInfo.Comparer.Default);      
 
         // Generate the commands
         context.RegisterSourceOutput(commandInfo, static (context, item) =>

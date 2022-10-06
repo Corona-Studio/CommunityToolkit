@@ -11,7 +11,6 @@ using CommunityToolkit.Mvvm.SourceGenerators.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using static CommunityToolkit.Mvvm.SourceGenerators.Diagnostics.DiagnosticDescriptors;
 
 namespace CommunityToolkit.Mvvm.SourceGenerators;
 
@@ -22,9 +21,9 @@ namespace CommunityToolkit.Mvvm.SourceGenerators;
 public abstract partial class TransitiveMembersGenerator<TInfo> : IIncrementalGenerator
 {
     /// <summary>
-    /// The fully qualified name of the attribute type to look for.
+    /// The fully qualified metadata name of the attribute type to look for.
     /// </summary>
-    private readonly string attributeType;
+    private readonly string fullyQualifiedAttributeMetadataName;
 
     /// <summary>
     /// An <see cref="IEqualityComparer{T}"/> instance to compare intermediate models.
@@ -52,13 +51,13 @@ public abstract partial class TransitiveMembersGenerator<TInfo> : IIncrementalGe
     /// <summary>
     /// Initializes a new instance of the <see cref="TransitiveMembersGenerator{TInfo}"/> class.
     /// </summary>
-    /// <param name="attributeType">The fully qualified name of the attribute type to look for.</param>
+    /// <param name="fullyQualifiedAttributeMetadataName">The fully qualified metadata name of the attribute type to look for.</param>
     /// <param name="comparer">An <see cref="IEqualityComparer{T}"/> instance to compare intermediate models.</param>
-    private protected TransitiveMembersGenerator(string attributeType, IEqualityComparer<TInfo>? comparer = null)
+    private protected TransitiveMembersGenerator(string fullyQualifiedAttributeMetadataName, IEqualityComparer<TInfo>? comparer = null)
     {
-        this.attributeType = attributeType;
+        this.fullyQualifiedAttributeMetadataName = fullyQualifiedAttributeMetadataName;
         this.comparer = comparer ?? EqualityComparer<TInfo>.Default;
-        this.classDeclaration = Execute.LoadClassDeclaration(attributeType);
+        this.classDeclaration = Execute.LoadClassDeclaration(fullyQualifiedAttributeMetadataName);
 
         Execute.ProcessMemberDeclarations(
             GetType(),
@@ -70,40 +69,35 @@ public abstract partial class TransitiveMembersGenerator<TInfo> : IIncrementalGe
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Get all class declarations
-        IncrementalValuesProvider<INamedTypeSymbol> typeSymbols =
-            context.SyntaxProvider
-            .CreateSyntaxProvider(
-                static (node, _) => node is ClassDeclarationSyntax { AttributeLists.Count: > 0 },
-                static (context, _) => (INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node)!);
-
-        // Filter the types with the target attribute
-        IncrementalValuesProvider<(INamedTypeSymbol Symbol, AttributeData AttributeData)> typeSymbolsWithAttributeData =
-            typeSymbols
-            .Select((item, _) => (
-                Symbol: item,
-                Attribute: item.GetAttributes().FirstOrDefault(a => a.AttributeClass?.HasFullyQualifiedName(this.attributeType) == true)))
-            .Where(static item => item.Attribute is not null)!;
-
-        // Transform the input data
-        IncrementalValuesProvider<(INamedTypeSymbol Symbol, TInfo Info)> typeSymbolsWithInfo = GetInfo(context, typeSymbolsWithAttributeData);
-
-        // Filter by language version
-        context.FilterWithLanguageVersion(ref typeSymbolsWithInfo, LanguageVersion.CSharp8, UnsupportedCSharpLanguageVersionError);
-
         // Gather all generation info, and any diagnostics
-        IncrementalValuesProvider<Result<(HierarchyInfo Hierarchy, bool IsSealed, TInfo Info)>> generationInfoWithErrors =
-            typeSymbolsWithInfo.Select((item, _) =>
-            {
-                if (ValidateTargetType(item.Symbol, item.Info, out ImmutableArray<Diagnostic> diagnostics))
+        IncrementalValuesProvider<Result<(HierarchyInfo Hierarchy, bool IsSealed, TInfo? Info)>> generationInfoWithErrors =
+            context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                this.fullyQualifiedAttributeMetadataName,
+                static (node, _) => node is ClassDeclarationSyntax classDeclaration && classDeclaration.HasOrPotentiallyHasAttributes(),
+                (context, token) =>
                 {
-                    return new Result<(HierarchyInfo, bool, TInfo)>(
-                        (HierarchyInfo.From(item.Symbol), item.Symbol.IsSealed, item.Info),
-                        ImmutableArray<Diagnostic>.Empty);
-                }
+                    if (!context.SemanticModel.Compilation.HasLanguageVersionAtLeastEqualTo(LanguageVersion.CSharp8))
+                    {
+                        return default;
+                    }
 
-                return new Result<(HierarchyInfo, bool, TInfo)>(default, diagnostics);
-            });
+                    INamedTypeSymbol typeSymbol = (INamedTypeSymbol)context.TargetSymbol;
+
+                    // Gather all generation info, and any diagnostics
+                    TInfo? info = ValidateTargetTypeAndGetInfo(typeSymbol, context.Attributes[0], context.SemanticModel.Compilation, out ImmutableArray<Diagnostic> diagnostics);
+
+                    // If there are any diagnostics, there's no need to compute the hierarchy info at all, just return them
+                    if (diagnostics.Length > 0)
+                    {
+                        return new Result<(HierarchyInfo, bool, TInfo?)>(default, diagnostics);
+                    }
+
+                    HierarchyInfo hierarchy = HierarchyInfo.From(typeSymbol);
+
+                    return new Result<(HierarchyInfo, bool, TInfo?)>((hierarchy, typeSymbol.IsSealed, info), diagnostics);
+                })
+            .Where(static item => item is not null)!;
 
         // Emit the diagnostic, if needed
         context.ReportDiagnostics(generationInfoWithErrors.Select(static (item, _) => item.Errors));
@@ -112,7 +106,7 @@ public abstract partial class TransitiveMembersGenerator<TInfo> : IIncrementalGe
         IncrementalValuesProvider<(HierarchyInfo Hierarchy, bool IsSealed, TInfo Info)> generationInfo =
             generationInfoWithErrors
             .Where(static item => item.Errors.IsEmpty)
-            .Select(static (item, _) => item.Value)
+            .Select(static (item, _) => item.Value)!
             .WithComparers(HierarchyInfo.Comparer.Default, EqualityComparer<bool>.Default, this.comparer);
 
         // Generate the required members
@@ -127,23 +121,15 @@ public abstract partial class TransitiveMembersGenerator<TInfo> : IIncrementalGe
     }
 
     /// <summary>
-    /// Gathers info from a source <see cref="IncrementalValuesProvider{TValues}"/> input.
+    /// Validates the target type being processes, gets the info if possible and produces all necessary diagnostics.
     /// </summary>
-    /// <param name="context">The <see cref="IncrementalGeneratorInitializationContext"/> instance in use.</param>
-    /// <param name="source">The source <see cref="IncrementalValuesProvider{TValues}"/> input.</param>
-    /// <returns>A transformed <see cref="IncrementalValuesProvider{TValues}"/> instance with the gathered data.</returns>
-    protected abstract IncrementalValuesProvider<(INamedTypeSymbol Symbol, TInfo Info)> GetInfo(
-        IncrementalGeneratorInitializationContext context,
-        IncrementalValuesProvider<(INamedTypeSymbol Symbol, AttributeData AttributeData)> source);
-
-    /// <summary>
-    /// Validates a target type being processed.
-    /// </summary>
-    /// <param name="typeSymbol">The <see cref="INamedTypeSymbol"/> instance for the target type.</param>
-    /// <param name="info">The <typeparamref name="TInfo"/> instance with the current processing info.</param>
-    /// <param name="diagnostics">The resulting diagnostics from the processing operation.</param>
-    /// <returns>Whether or not the target type is valid and can be processed normally.</returns>
-    protected abstract bool ValidateTargetType(INamedTypeSymbol typeSymbol, TInfo info, out ImmutableArray<Diagnostic> diagnostics);
+    /// <param name="typeSymbol">The <see cref="INamedTypeSymbol"/> instance currently being processed.</param>
+    /// <param name="attributeData">The <see cref="AttributeData"/> instance for the attribute used over <paramref name="typeSymbol"/>.</param>
+    /// <param name="compilation">The compilation that <paramref name="typeSymbol"/> belongs to.</param>
+    /// <param name="diagnostics">The resulting diagnostics, if any.</param>
+    /// <returns>The extracted info for the current type, if possible.</returns>
+    /// <remarks>If <paramref name="diagnostics"/> is empty, the returned info will always be ignored and no sources will be produced.</remarks>
+    protected abstract TInfo? ValidateTargetTypeAndGetInfo(INamedTypeSymbol typeSymbol, AttributeData attributeData, Compilation compilation, out ImmutableArray<Diagnostic> diagnostics);
 
     /// <summary>
     /// Filters the <see cref="MemberDeclarationSyntax"/> nodes to generate from the input parsed tree.
